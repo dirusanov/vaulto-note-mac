@@ -1,87 +1,211 @@
-# Vaulto Note for Mac
+<p align="center">
+  <img src="docs/banner.png" alt="Vaulto Note — free offline Whisper dictation for Mac" width="100%">
+</p>
 
-Menu bar dictation: hold a key, speak, release — the text is transcribed **locally**
-with Whisper (whisper.cpp on Metal) and pasted into whatever app has focus.
-Nothing leaves the Mac.
+<h1 align="center">Vaulto Note for Mac</h1>
 
-## Build
+<p align="center">
+  <b>Hold a key, speak, release — your words appear in any app.</b><br>
+  Free, open-source voice typing for macOS powered by OpenAI Whisper.<br>
+  Runs 100% on your Mac: no cloud, no account, no subscription.
+</p>
 
-```bash
-scripts/create-dev-cert.sh        # once: stable signing identity, keeps privacy permissions across rebuilds
-scripts/build-app.sh --install    # builds build/Vaulto Note.app and copies it to ~/Applications
+<p align="center">
+  <a href="https://github.com/dirusanov/vaulto-note-mac/releases/latest"><img src="https://img.shields.io/github/v/release/dirusanov/vaulto-note-mac?label=Download&style=for-the-badge&color=0066FF" alt="Download"></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-14%2B-000?logo=apple" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/Apple%20Silicon-M1%E2%80%93M5-000" alt="Apple Silicon">
+  <img src="https://img.shields.io/badge/Swift-SwiftUI-F05138?logo=swift&logoColor=white" alt="Swift">
+  <img src="https://img.shields.io/badge/engine-whisper.cpp%20%2B%20Metal-0066FF" alt="whisper.cpp">
+  <img src="https://img.shields.io/github/license/dirusanov/vaulto-note-mac" alt="MIT license">
+  <img src="https://img.shields.io/github/stars/dirusanov/vaulto-note-mac?style=social" alt="Stars">
+</p>
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Click the microphone or hold right Option, speak, and the transcript appears" width="820">
+</p>
+
+---
+
+## Why Vaulto Note
+
+- **Private by design.** Speech recognition runs locally with [whisper.cpp](https://github.com/ggml-org/whisper.cpp) on the GPU. Audio and text never leave your Mac — it works in airplane mode.
+- **Types where you work.** Mail, Slack, Telegram, Notes, VS Code, the browser — the text lands wherever your cursor is.
+- **Fast.** An 8-second phrase is transcribed in about 0.6 s on Apple Silicon with Whisper Large v3 Turbo.
+- **Multilingual.** About 100 languages with automatic detection, even when you mix languages in one sentence ("задеплоить новый build").
+- **Free and open source.** MIT-licensed. No account, no limits, no telemetry.
+
+<p align="center">
+  <img src="docs/recording-indicator.gif" alt="Floating recording indicator with live waveform" width="460">
+</p>
+
+## Features
+
+| | |
+|---|---|
+| 🎙 **Push-to-talk anywhere** | Hold right ⌥ (or any key you like), speak, release. |
+| 👆 **Hold or tap** | Hold to talk, or tap once for hands-free recording and tap again to finish. Toggle-only and hold-only modes too. |
+| ⌨️ **Any shortcut** | A single key (right ⌥ / ⌘ / ⇧ / ⌃, Fn 🌐) or a combo like ⌃⌥Space. Esc cancels. |
+| 🖱 **One-click recording** | A big mic button in the app for quick voice notes — the text is copied for you. |
+| 🧠 **Choice of models** | Whisper Large v3 Turbo (recommended), a compact 574 MB version, or Large v3 for maximum accuracy. Download, switch and delete in one click. |
+| 📖 **Custom vocabulary** | Teach it names, brands and jargon so they're spelled your way. |
+| 🛟 **Never lose a dictation** | No text field focused? The text stays on the clipboard. ⌃⌘V pastes your last dictation again. |
+| 🕘 **Searchable history** | Every dictation, grouped by day, with search and one-click copy. |
+| 📋 **Clipboard-friendly** | Your previous clipboard is restored after pasting. |
+| 🌍 **8 interface languages** | English, Русский, Deutsch, Español, Français, Português, 中文, 日本語 — follows your system language. |
+| 🌓 **Native macOS feel** | SwiftUI, light & dark mode, menu bar icon, open at login, optional Dock icon. |
+
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/light-onboarding-0.png" alt="Welcome screen"></td>
+    <td><img src="docs/screenshots/light-onboarding-4.png" alt="Practice dictation during onboarding"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Five-step welcome: permissions are explained before they're asked</sub></td>
+    <td align="center"><sub>Your first dictation happens right inside the setup</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/light-transcription.png" alt="Model picker"></td>
+    <td><img src="docs/screenshots/light-shortcuts.png" alt="Shortcut settings"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Pick a Whisper model — speed and accuracy at a glance</sub></td>
+    <td align="center"><sub>Record any shortcut, choose how it behaves</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/light-history.png" alt="History with search"></td>
+    <td><img src="docs/screenshots/dark-home.png" alt="Dark mode"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>History: search, group by day, copy</sub></td>
+    <td align="center"><sub>Dark mode</sub></td>
+  </tr>
+</table>
+
+## Install
+
+1. Download **Vaulto-Note-x.y.z.zip** from the [latest release](https://github.com/dirusanov/vaulto-note-mac/releases/latest) and unzip it.
+2. Drag **Vaulto Note.app** to your Applications folder.
+3. **First launch:** the app isn't notarized by Apple yet, so macOS will warn you. Right-click the app → **Open** → **Open**.
+   On macOS 15+ you may need **System Settings → Privacy & Security → Open Anyway**.
+   Or in Terminal: `xattr -dr com.apple.quarantine "/Applications/Vaulto Note.app"`
+4. Follow the welcome screens: allow the microphone and Accessibility, pick your key, try your first dictation.
+
+The speech model (about 1.6 GB) downloads once during setup; after that everything works offline.
+
+**Requirements:** macOS 14 Sonoma or later, Apple Silicon (M1 or newer), ~2 GB of free space.
+
+## How it works
+
+```
+ hold key ─▶ AVAudioEngine (16 kHz mono) ─▶ whisper.cpp on Metal ─▶ cleanup ─▶ ⌘V into the focused app
 ```
 
-Needs Xcode (used via `DEVELOPER_DIR`, no `xcode-select` change). `build-app.sh`
-downloads the prebuilt whisper.cpp XCFramework into `Vendor/` on first run
-(`scripts/fetch-whisper.sh`, tag `b5130`).
-
-First launch opens a five-step welcome (intro → microphone → Accessibility → shortcut →
-practice dictation); each permission is requested only when the user clicks, and the step
-advances by itself once it is granted. macOS asks for **Microphone** and **Accessibility** (needed to see the
-hotkey in other apps and to paste with ⌘V). If the default model is missing, the app
-downloads it (~1.6 GB) into `~/Library/Application Support/VaultoNote/Models/`.
-
-## Use
-
-- Hold **right ⌥ Option**, speak, release. Any single right-hand modifier, Fn, or a combo
-  such as ⌃⌥Space can be recorded on the Shortcuts page.
-- Modes: hold or tap (tap = hands-free, tap again to finish), hold only, press to start/stop.
-  Esc cancels. ⌥+letter while holding is treated as typing, not dictation.
-- Window pages: Overview, History (search, per-day groups), Shortcuts, Transcription (models,
-  speech language, vocabulary), General (text insertion, interface language, login item).
-- If no text field has focus, the text stays on the clipboard instead of being lost;
-  ⌃⌘V pastes the last dictation again.
+- **Microphone** is on only while you record; macOS shows its orange indicator.
+- **Accessibility** lets the app notice your shortcut in other apps and paste with ⌘V. It doesn't read your screen or keystrokes beyond the shortcut.
+- The only network request is downloading the model from [Hugging Face](https://huggingface.co/ggerganov/whisper.cpp).
+- History is a local JSON file in `~/Library/Application Support/VaultoNote/`.
 
 ## Models
 
-| Model | Size | Notes |
+| Model | Size | Best for |
 |---|---|---|
-| Large v3 Turbo | 1.6 GB | default; ~0.6 s for an 8 s phrase on M5 Pro |
-| Large v3 Turbo q5 | 574 MB | same model as the mobile app's "Turbo" |
-| Large v3 | 3.1 GB | slightly more accurate, slower |
+| **Large v3 Turbo** | 1.6 GB | Recommended: fast and accurate in ~100 languages |
+| Turbo Compact (q5) | 574 MB | Same model, a third of the size, slightly less accurate |
+| Large v3 | 3.1 GB | Hard audio and rare languages, slower |
 
-## Tests
+## FAQ
+
+<details>
+<summary><b>Is it really free? What's the catch?</b></summary>
+
+It's MIT-licensed open source. There's no server, so there's nothing to charge for. Vaulto Note for Mac is the desktop companion of the <a href="https://play.google.com/store/search?q=Vaulto%20Note&c=apps">Vaulto Note</a> mobile app.
+</details>
+
+<details>
+<summary><b>Does it work offline?</b></summary>
+
+Yes. After the one-time model download, recognition is fully local.
+</details>
+
+<details>
+<summary><b>How is it different from Apple's built-in dictation?</b></summary>
+
+Whisper handles punctuation, technical terms and mixed-language speech much better, works the same in every app, lets you choose the model and add your own vocabulary, and keeps a searchable history.
+</details>
+
+<details>
+<summary><b>Is this an alternative to Superwhisper, Wispr Flow or MacWhisper?</b></summary>
+
+If you want push-to-talk Whisper dictation that's free, open source and fully offline — yes. Those apps have more features (AI rewriting, cloud models, file transcription); Vaulto Note focuses on fast, private dictation.
+</details>
+
+<details>
+<summary><b>The Fn / 🌐 key opens emoji instead of recording.</b></summary>
+
+System Settings → Keyboard → "Press 🌐 key to" → Do Nothing. Or use right ⌥, which works out of the box.
+</details>
+
+<details>
+<summary><b>Intel Macs?</b></summary>
+
+Not supported: Whisper Large needs Apple Silicon's GPU to be fast enough for dictation.
+</details>
+
+## Build from source
 
 ```bash
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
+git clone https://github.com/dirusanov/vaulto-note-mac.git
+cd vaulto-note-mac
+scripts/create-dev-cert.sh        # once: stable signing identity, keeps permissions across rebuilds
+scripts/build-app.sh --install    # builds and copies to ~/Applications
 ```
 
-Hotkey modes, text cleanup, shortcut storage, translation completeness, and end-to-end
-transcription on the real model (skipped if it isn't downloaded).
-
-## Icon
-
-`swift scripts/make-icon.swift Resources/icon-glyph.png Resources/AppIcon-1024.png` puts the
-mobile app's glyph on Apple's icon grid; a full-bleed square gets a grey placeholder on macOS.
-
-## Headless check
+Needs Xcode (used via `DEVELOPER_DIR`). The prebuilt whisper.cpp XCFramework is downloaded on first build.
 
 ```bash
-"build/Vaulto Note.app/Contents/MacOS/VaultoNote" --transcribe speech.wav [ru|en|auto]
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test   # 25 tests incl. end-to-end transcription
+"build/Vaulto Note.app/Contents/MacOS/VaultoNote" --snapshot /tmp/snap en ru de   # render every screen to PNG
+"build/Vaulto Note.app/Contents/MacOS/VaultoNote" --transcribe speech.wav ru       # headless transcription
 ```
 
-Prints the transcript and `[lang] load=… audio=… transcribe=…` timings to stderr.
+<details>
+<summary>Code layout</summary>
 
-## Reviewing the UI
-
-```bash
-"build/Vaulto Note.app/Contents/MacOS/VaultoNote" --snapshot /tmp/snap ru en de
-```
-
-Renders every page in light and dark with sample data to PNG — the quickest way to check
-wrapping and alignment in long languages (German) after a layout change.
-
-## Layout
-
+- `AppController` — app state and the dictation pipeline; the UI binds to it
 - `WhisperEngine` — whisper.cpp wrapper, serialized on one queue
 - `AudioRecorder` — AVAudioEngine → 16 kHz mono Float32
-- `AppController` — app state and the dictation pipeline; the window binds to it
-- `Hotkeys` — shortcut model, trigger modes, `flagsChanged` + Carbon hot keys
-- `MainWindow`, `Components`, `Theme` — SwiftUI window in the mobile app's palette
-- `Localization` — interface strings (en, ru, de, es, fr, pt, zh, ja)
-- `TextInserter` — clipboard + synthetic ⌘V, restores the previous clipboard
-- `TextCleanup` — port of the mobile app's Whisper hallucination filter
-- `HUD`, `AppDelegate` — floating recording indicator, status bar menu, main menu
+- `Hotkeys` — shortcut model, hold/tap/toggle state machine, `flagsChanged` + Carbon hot keys
+- `TextInserter` — focused-field check, clipboard + synthetic ⌘V, clipboard restore
+- `MainWindow`, `Onboarding`, `HUD`, `Components`, `Theme` — SwiftUI interface
+- `Localization` — interface strings in 8 languages
+- `Snapshot` — renders screens, GIF frames and the banner for docs
+</details>
 
-Next steps: notes window with audio, then Vaulto account + E2EE sync (must stay
-byte-compatible with `vaulto_note_mobile/src/crypto/e2ee.ts`).
+## Roadmap
+
+- [ ] Notarized builds and Homebrew cask
+- [ ] Sync dictations with the Vaulto Note mobile app (end-to-end encrypted)
+- [ ] Optional AI cleanup of filler words
+- [ ] Pause media while recording
+
+Ideas and bug reports are welcome in [Issues](https://github.com/dirusanov/vaulto-note-mac/issues). If Vaulto Note saves you typing, a ⭐ helps others find it.
+
+## Русский
+
+**Vaulto Note для Mac** — бесплатный голосовой ввод на базе Whisper, который работает полностью на вашем Mac. Удерживайте правый ⌥, говорите, отпустите — текст появится там, где стоит курсор, в любом приложении. Около 100 языков с автоопределением (можно смешивать русский и английский в одной фразе), без интернета, без аккаунта и подписки. Скачать — в [релизах](https://github.com/dirusanov/vaulto-note-mac/releases/latest); при первом запуске нажмите на приложении правой кнопкой → «Открыть».
+
+## Credits
+
+- [whisper.cpp](https://github.com/ggml-org/whisper.cpp) by Georgi Gerganov and contributors
+- [OpenAI Whisper](https://github.com/openai/whisper) models
+
+## License
+
+[MIT](LICENSE) © 2026 Dmitrii Rus
+
+<sub>Keywords: whisper dictation mac, speech to text macOS, offline voice typing, local transcription, push to talk dictation, voice to text app, whisper.cpp app, Apple Silicon, privacy, open source dictation, Superwhisper alternative, Wispr Flow alternative, MacWhisper alternative.</sub>

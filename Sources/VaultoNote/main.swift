@@ -28,6 +28,17 @@ if let flag = CommandLine.arguments.firstIndex(of: "--transcribe"), CommandLine.
     }
 }
 
+if let flag = CommandLine.arguments.firstIndex(of: "--banner"), CommandLine.arguments.count > flag + 2 {
+    Snapshot.banner(to: URL(fileURLWithPath: CommandLine.arguments[flag + 1]),
+                    screenshot: URL(fileURLWithPath: CommandLine.arguments[flag + 2]))
+    exit(0)
+}
+
+if let flag = CommandLine.arguments.firstIndex(of: "--demo"), CommandLine.arguments.count > flag + 1 {
+    Snapshot.demo(directory: URL(fileURLWithPath: CommandLine.arguments[flag + 1]))
+    exit(0)
+}
+
 if let flag = CommandLine.arguments.firstIndex(of: "--snapshot"), CommandLine.arguments.count > flag + 1 {
     let args = Array(CommandLine.arguments.dropFirst(flag + 1))
     let languages = args.count > 1 ? Array(args.dropFirst()) : ["ru", "en"]

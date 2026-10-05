@@ -431,9 +431,14 @@ final class AppController: ObservableObject {
     }
 
     /// Snapshot-only: shows the record button mid-recording or with a result.
-    func applyPreviewDictation(recording: Bool, result: String?) {
-        phase = recording ? .recording(started: Date().addingTimeInterval(-12)) : .idle
-        level = recording ? 0.5 : 0
+    func applyPreviewDictation(recording: Bool, result: String?, transcribing: Bool = false,
+                               elapsed: TimeInterval = 12, level: Float = 0.5) {
+        if transcribing {
+            phase = .transcribing
+        } else {
+            phase = recording ? .recording(started: Date().addingTimeInterval(-elapsed)) : .idle
+        }
+        self.level = recording ? level : 0
         inAppResult = result
     }
 

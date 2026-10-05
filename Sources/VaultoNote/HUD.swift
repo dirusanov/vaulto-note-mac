@@ -20,14 +20,15 @@ final class HUDController {
     private let model = HUDModel()
     private lazy var panel: NSPanel = {
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 72),
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 80),
             styleMask: [.nonactivatingPanel, .borderless],
             backing: .buffered,
             defer: true
         )
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = false
+        // The system shadow follows the capsule's shape.
+        panel.hasShadow = true
         panel.level = .statusBar
         panel.ignoresMouseEvents = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
@@ -78,9 +79,12 @@ struct HUDView: View {
             .foregroundStyle(VaultoColor.text)
             .padding(.horizontal, 16)
             .frame(height: 44)
-            .background(Capsule().fill(VaultoColor.surfaceElevated))
-            .overlay(Capsule().stroke(VaultoColor.border, lineWidth: 1))
-            .shadow(color: .black.opacity(0.18), radius: 12, y: 4)
+            .fixedSize()
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .circular)
+                    .fill(VaultoColor.surfaceElevated)
+                    .overlay(RoundedRectangle(cornerRadius: 22, style: .circular).strokeBorder(VaultoColor.border, lineWidth: 1))
+            )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
