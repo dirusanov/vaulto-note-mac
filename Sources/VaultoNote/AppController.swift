@@ -342,7 +342,8 @@ final class AppController: ObservableObject {
 
         engine.transcribe(samples: samples, language: speechLanguage, prompt: vocabulary) { [weak self] result in
             guard let self else { return }
-            self.setPhase(.idle)
+            // Persist and deliver before telling the updater that dictation is idle.
+            defer { self.setPhase(.idle) }
             self.hud.show(.hidden)
             switch result {
             case .success(let transcript):

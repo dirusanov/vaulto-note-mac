@@ -4,11 +4,37 @@ import Sparkle
 
 /// Holds a requested restart until dictation and model preparation finish.
 final class UpdateRestartGate {
-    var isBusy = false {
-        didSet {
-            guard !isBusy, let restart = pendingRestart else { return }
-            pendingRestart = nil
-            restart()
+    /// One quiet second lets pending paste/clipboard work finish. New activity
+    /// cancels this window, including download → model preparation transitions.
+    private let scheduleIdle: (@escaping () -> Void) -> (() -> Void)
+    private var activityBusy = false
+    private var cancelIdle: (() -> Void)?
+    private var idleGeneration: UInt = 0
+
+    init(scheduleIdle: @escaping (@escaping () -> Void) -> (() -> Void) = { action in
+        let work = DispatchWorkItem(block: action)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: work)
+        return { work.cancel() }
+    }) {
+        self.scheduleIdle = scheduleIdle
+    }
+
+    var isBusy: Bool {
+        get { activityBusy || cancelIdle != nil }
+        set {
+            activityBusy = newValue
+            idleGeneration &+= 1
+            cancelIdle?()
+            cancelIdle = nil
+            guard !newValue else { return }
+            let generation = idleGeneration
+            cancelIdle = scheduleIdle { [weak self] in
+                guard let self, generation == self.idleGeneration, !self.activityBusy else { return }
+                self.cancelIdle = nil
+                guard let restart = self.pendingRestart else { return }
+                self.pendingRestart = nil
+                restart()
+            }
         }
     }
     private var pendingRestart: (() -> Void)?

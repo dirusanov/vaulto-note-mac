@@ -11,6 +11,10 @@ model preparation to finish. Models, history and preferences live outside the
 app bundle and survive updates. macOS can ask for authorization if the app's
 installation directory is not writable by the current user.
 
+Dictation is marked idle only after its result is saved and delivered. The
+updater then waits one quiet second for clipboard restoration before a pending
+restart; starting another dictation or preparing a model cancels that window.
+
 **Migration:** 0.1.0 has no updater. Its users must install 0.1.1 from the DMG
 once, replacing the old app in Applications. Subsequent updates use Sparkle.
 
