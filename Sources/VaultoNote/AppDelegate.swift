@@ -8,6 +8,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         case transcribing
     }
 
+    /// Kept as data rather than a string so the text follows interface language changes.
+    private enum ModelState {
+        case notLoaded
+        case notDownloaded
+        case loading
+        case ready(WhisperModel)
+        case downloading(WhisperModel, Int)
+        case loadFailed(String)
+        case downloadFailed(String)
+
+        var text: String {
+            switch self {
+            case .notLoaded: return L10n.t("model.not_loaded")
+            case .notDownloaded: return L10n.t("model.not_downloaded")
+            case .loading: return L10n.t("model.loading")
+            case .ready(let model): return L10n.t("model.ready", model.title)
+            case .downloading(let model, let percent): return L10n.t("model.downloading", model.title, percent)
+            case .loadFailed(let message): return message
+            case .downloadFailed(let message): return L10n.t("model.download_error", message)
+            }
+        }
+    }
+
     /// Presses shorter than this are treated as accidental taps.
     private static let minRecordingSeconds = 0.35
 
@@ -22,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private lazy var mainWindow = MainWindowController(status: status, actions: WindowActions(
         requestMicrophone: { [weak self] in self?.requestMicrophone() },
         requestAccessibility: { [weak self] in self?.openAccessibility() },
+        selectInterfaceLanguage: { [weak self] in self?.setInterfaceLanguage($0) },
         selectLanguage: { [weak self] in self?.setLanguage($0) },
         selectTriggerKey: { [weak self] in self?.setTriggerKey($0) },
         selectModel: { [weak self] in self?.setModel(WhisperModel.find($0)) },
@@ -35,8 +59,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private var statusItem: NSStatusItem!
     private var phase: Phase = .idle
-    private var modelStatus = "Модель не загружена" {
-        didSet { status.modelStatus = modelStatus }
+    private var modelState = ModelState.notLoaded {
+        didSet { status.modelStatus = modelState.text }
     }
     private var isModelReady = false {
         didSet { status.isModelReady = isModelReady }
@@ -61,7 +85,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         hotkey.onInterrupted = { [weak self] in self?.cancelRecording() }
         hotkey.start()
 
-        status.modelStatus = modelStatus
+        status.modelStatus = modelState.text
         status.history = history.entries
         mainWindow.show()
 
@@ -108,7 +132,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.trustTimer = nil
             self?.hotkey.start()
             self?.status.refreshPermissions()
-            self?.hud.show(.message("Готово: удерживайте \(Settings.triggerKey.title) и говорите"))
+            self?.hud.show(.message(L10n.t("hud.ready_hold", Settings.triggerKey.title)))
         }
     }
 
@@ -116,19 +140,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let model = WhisperModel.find(Settings.modelID)
         isModelReady = false
         guard model.isDownloaded else {
-            modelStatus = "Модель не скачана"
+            modelState = .notDownloaded
             downloadModel(model)
             return
         }
-        modelStatus = "Загружаю модель…"
+        modelState = .loading
         engine.load(modelPath: model.fileURL.path) { [weak self] result in
             guard let self else { return }
             switch result {
             case .success:
                 self.isModelReady = true
-                self.modelStatus = "\(model.title) — готово"
+                self.modelState = .ready(model)
             case .failure(let error):
-                self.modelStatus = error.localizedDescription
+                self.modelState = .loadFailed(error.localizedDescription)
                 self.hud.show(.message(error.localizedDescription))
             }
         }
@@ -136,9 +160,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func downloadModel(_ model: WhisperModel) {
         guard models.downloading == nil else { return }
-        modelStatus = "Скачиваю \(model.title)… 0%"
+        modelState = .downloading(model, 0)
         models.onProgress = { [weak self] progress in
-            self?.modelStatus = "Скачиваю \(model.title)… \(Int(progress * 100))%"
+            self?.modelState = .downloading(model, Int(progress * 100))
         }
         models.download(model) { [weak self] result in
             guard let self else { return }
@@ -146,8 +170,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             case .success:
                 if Settings.modelID == model.id { self.loadSelectedModel() }
             case .failure(let error):
-                self.modelStatus = "Ошибка загрузки: \(error.localizedDescription)"
-                self.hud.show(.message("Не удалось скачать модель"))
+                self.modelState = .downloadFailed(error.localizedDescription)
+                self.hud.show(.message(L10n.t("model.download_failed")))
             }
         }
     }
@@ -157,26 +181,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let main = NSMenu()
 
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "О Vaulto Note", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(withTitle: L10n.t("mainmenu.about"), action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Скрыть Vaulto Note", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
-        appMenu.addItem(withTitle: "Завершить Vaulto Note", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: L10n.t("mainmenu.hide"), action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        appMenu.addItem(withTitle: L10n.t("mainmenu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         let appMenuItem = NSMenuItem(title: "Vaulto Note", action: nil, keyEquivalent: "")
         appMenuItem.submenu = appMenu
         main.addItem(appMenuItem)
 
-        let editMenu = NSMenu(title: "Правка")
-        editMenu.addItem(withTitle: "Скопировать", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        editMenu.addItem(withTitle: "Вставить", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        editMenu.addItem(withTitle: "Выбрать все", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
-        let editMenuItem = NSMenuItem(title: "Правка", action: nil, keyEquivalent: "")
+        let editMenu = NSMenu(title: L10n.t("mainmenu.edit"))
+        editMenu.addItem(withTitle: L10n.t("mainmenu.copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: L10n.t("mainmenu.paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: L10n.t("mainmenu.select_all"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        let editMenuItem = NSMenuItem(title: L10n.t("mainmenu.edit"), action: nil, keyEquivalent: "")
         editMenuItem.submenu = editMenu
         main.addItem(editMenuItem)
 
-        let windowMenu = NSMenu(title: "Окно")
-        windowMenu.addItem(withTitle: "Закрыть", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
-        windowMenu.addItem(withTitle: "Свернуть", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
-        let windowMenuItem = NSMenuItem(title: "Окно", action: nil, keyEquivalent: "")
+        let windowMenu = NSMenu(title: L10n.t("mainmenu.window"))
+        windowMenu.addItem(withTitle: L10n.t("mainmenu.close"), action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        windowMenu.addItem(withTitle: L10n.t("mainmenu.minimize"), action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
+        let windowMenuItem = NSMenuItem(title: L10n.t("mainmenu.window"), action: nil, keyEquivalent: "")
         windowMenuItem.submenu = windowMenu
         main.addItem(windowMenuItem)
 
@@ -188,11 +212,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func startRecording() {
         guard case .idle = phase else { return }
         guard isModelReady else {
-            hud.show(.message(modelStatus))
+            hud.show(.message(modelState.text))
             return
         }
         guard AVCaptureDevice.authorizationStatus(for: .audio) == .authorized else {
-            hud.show(.message("Нет доступа к микрофону"))
+            hud.show(.message(L10n.t("error.no_mic_access")))
             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")!)
             return
         }
@@ -223,7 +247,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             switch result {
             case .success(let transcript):
                 guard !transcript.text.isEmpty else {
-                    self.hud.show(.message("Речь не распознана"))
+                    self.hud.show(.message(L10n.t("error.no_speech")))
                     return
                 }
                 self.history.add(HistoryEntry(
@@ -279,20 +303,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
-        menu.addItem(disabledItem(modelStatus))
+        menu.addItem(disabledItem(modelState.text))
         if !TextInserter.isTrusted {
-            menu.addItem(item("⚠️ Разрешить Универсальный доступ…", #selector(openAccessibility)))
+            menu.addItem(item(L10n.t("menu.allow_accessibility"), #selector(openAccessibility)))
         }
-        menu.addItem(disabledItem("Удерживайте \(Settings.triggerKey.title) и говорите"))
+        menu.addItem(disabledItem(L10n.t("menu.hold_to_speak", Settings.triggerKey.title)))
 
         let recordTitle: String
-        if case .recording = phase { recordTitle = "Остановить и вставить" } else { recordTitle = "Начать запись" }
+        if case .recording = phase {
+            recordTitle = L10n.t("menu.stop_insert")
+        } else {
+            recordTitle = L10n.t("menu.start_recording")
+        }
         menu.addItem(item(recordTitle, #selector(toggleRecording)))
         menu.addItem(.separator())
 
         let historyMenu = NSMenu()
         if history.entries.isEmpty {
-            historyMenu.addItem(disabledItem("Пока пусто"))
+            historyMenu.addItem(disabledItem(L10n.t("menu.history_empty")))
         } else {
             for (index, entry) in history.entries.prefix(15).enumerated() {
                 let title = entry.text.count > 60 ? String(entry.text.prefix(60)) + "…" : entry.text
@@ -302,10 +330,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 historyMenu.addItem(historyItem)
             }
             historyMenu.addItem(.separator())
-            historyMenu.addItem(disabledItem("Нажмите на запись, чтобы скопировать"))
-            historyMenu.addItem(item("Очистить историю", #selector(clearHistory)))
+            historyMenu.addItem(disabledItem(L10n.t("menu.click_to_copy")))
+            historyMenu.addItem(item(L10n.t("menu.clear_history"), #selector(clearHistory)))
         }
-        menu.addItem(submenu("История", historyMenu))
+        menu.addItem(submenu(L10n.t("menu.history"), historyMenu))
 
         let languageMenu = NSMenu()
         for (index, language) in DictationLanguage.all.enumerated() {
@@ -314,7 +342,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             languageItem.state = language.code == Settings.language ? .on : .off
             languageMenu.addItem(languageItem)
         }
-        menu.addItem(submenu("Язык", languageMenu))
+        menu.addItem(submenu(L10n.t("settings.speech_language"), languageMenu))
+
+        let interfaceMenu = NSMenu()
+        let systemItem = item(L10n.t("lang.system", L10n.name(of: L10n.systemLanguage)), #selector(selectInterfaceLanguage(_:)))
+        systemItem.representedObject = "system"
+        interfaceMenu.addItem(systemItem)
+        interfaceMenu.addItem(.separator())
+        for language in L10n.languages {
+            let languageItem = item(language.name, #selector(selectInterfaceLanguage(_:)))
+            languageItem.representedObject = language.code
+            interfaceMenu.addItem(languageItem)
+        }
+        for languageItem in interfaceMenu.items {
+            languageItem.state = languageItem.representedObject as? String == Settings.interfaceLanguage ? .on : .off
+        }
+        menu.addItem(submenu(L10n.t("settings.interface_language"), interfaceMenu))
 
         let keyMenu = NSMenu()
         for (index, key) in TriggerKey.allCases.enumerated() {
@@ -323,27 +366,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             keyItem.state = key == Settings.triggerKey ? .on : .off
             keyMenu.addItem(keyItem)
         }
-        menu.addItem(submenu("Клавиша", keyMenu))
+        menu.addItem(submenu(L10n.t("settings.key"), keyMenu))
 
         let modelMenu = NSMenu()
         for (index, model) in WhisperModel.all.enumerated() {
-            let suffix = model.isDownloaded ? "" : " — скачать"
+            let suffix = model.isDownloaded ? "" : L10n.t("model.download_suffix")
             let modelItem = item("\(model.title) (\(model.sizeLabel))\(suffix)", #selector(selectModel(_:)))
             modelItem.tag = index
             modelItem.state = model.id == Settings.modelID ? .on : .off
             modelMenu.addItem(modelItem)
         }
         modelMenu.addItem(.separator())
-        modelMenu.addItem(item("Открыть папку с моделями", #selector(openModelsFolder)))
-        menu.addItem(submenu("Модель", modelMenu))
+        modelMenu.addItem(item(L10n.t("menu.open_models_folder"), #selector(openModelsFolder)))
+        menu.addItem(submenu(L10n.t("settings.model"), modelMenu))
 
-        let spaceItem = item("Пробел после текста", #selector(toggleTrailingSpace))
+        let spaceItem = item(L10n.t("settings.trailing_space"), #selector(toggleTrailingSpace))
         spaceItem.state = Settings.trailingSpace ? .on : .off
         menu.addItem(spaceItem)
 
         menu.addItem(.separator())
-        menu.addItem(item("Открыть окно Vaulto Note", #selector(openMainWindow)))
-        menu.addItem(item("Выйти", #selector(NSApplication.terminate(_:)), key: "q"))
+        menu.addItem(item(L10n.t("menu.open_window"), #selector(openMainWindow)))
+        menu.addItem(item(L10n.t("menu.quit"), #selector(NSApplication.terminate(_:)), key: "q"))
     }
 
     private func item(_ title: String, _ action: Selector, key: String = "") -> NSMenuItem {
@@ -396,6 +439,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         setModel(WhisperModel.all[sender.tag])
     }
 
+    @objc private func selectInterfaceLanguage(_ sender: NSMenuItem) {
+        guard let code = sender.representedObject as? String else { return }
+        setInterfaceLanguage(code)
+    }
+
+    private func setInterfaceLanguage(_ code: String) {
+        Settings.interfaceLanguage = code
+        status.interfaceLanguage = code
+        status.modelStatus = modelState.text
+        NSApp.mainMenu = Self.makeMainMenu()
+    }
+
     private func setLanguage(_ code: String) {
         Settings.language = code
         status.language = code
@@ -410,7 +465,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func setModel(_ model: WhisperModel) {
         guard models.downloading == nil else {
-            hud.show(.message("Дождитесь окончания загрузки"))
+            hud.show(.message(L10n.t("model.wait_download")))
             return
         }
         Settings.modelID = model.id

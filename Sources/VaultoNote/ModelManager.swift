@@ -2,18 +2,22 @@ import Foundation
 
 struct WhisperModel {
     let id: String
-    let title: String
-    let sizeLabel: String
+    private let name: String
+    private let isCompressed: Bool
+    let sizeGB: Double
     let filename: String
+
+    var title: String { isCompressed ? "\(name) (\(L10n.t("model.compressed")))" : name }
+    var sizeLabel: String { L10n.size(gigabytes: sizeGB) }
 
     var url: URL { URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/\(filename)")! }
     var fileURL: URL { AppPaths.models.appendingPathComponent(filename) }
     var isDownloaded: Bool { FileManager.default.fileExists(atPath: fileURL.path) }
 
     static let all: [WhisperModel] = [
-        .init(id: "turbo", title: "Large v3 Turbo", sizeLabel: "1,6 ГБ", filename: "ggml-large-v3-turbo.bin"),
-        .init(id: "turbo-q5", title: "Large v3 Turbo (сжатая)", sizeLabel: "574 МБ", filename: "ggml-large-v3-turbo-q5_0.bin"),
-        .init(id: "large", title: "Large v3", sizeLabel: "3,1 ГБ", filename: "ggml-large-v3.bin"),
+        .init(id: "turbo", name: "Large v3 Turbo", isCompressed: false, sizeGB: 1.6, filename: "ggml-large-v3-turbo.bin"),
+        .init(id: "turbo-q5", name: "Large v3 Turbo", isCompressed: true, sizeGB: 0.574, filename: "ggml-large-v3-turbo-q5_0.bin"),
+        .init(id: "large", name: "Large v3", isCompressed: false, sizeGB: 3.1, filename: "ggml-large-v3.bin"),
     ]
 
     static let defaultModel = all[0]
@@ -51,7 +55,7 @@ final class ModelManager: NSObject, URLSessionDownloadDelegate {
         do {
             if let http = downloadTask.response as? HTTPURLResponse, http.statusCode != 200 {
                 throw NSError(domain: "VaultoNote", code: http.statusCode, userInfo: [
-                    NSLocalizedDescriptionKey: "Сервер моделей ответил HTTP \(http.statusCode)",
+                    NSLocalizedDescriptionKey: L10n.t("error.http", http.statusCode),
                 ])
             }
             try Self.validate(location)
@@ -83,7 +87,7 @@ final class ModelManager: NSObject, URLSessionDownloadDelegate {
         let magic = String(decoding: handle.readData(ofLength: 4), as: UTF8.self)
         guard magic == "lmgg" || magic == "ggml" else {
             throw NSError(domain: "VaultoNote", code: 2, userInfo: [
-                NSLocalizedDescriptionKey: "Скачанный файл не является моделью Whisper",
+                NSLocalizedDescriptionKey: L10n.t("error.not_a_model"),
             ])
         }
     }

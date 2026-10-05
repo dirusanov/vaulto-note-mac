@@ -28,7 +28,7 @@ final class AudioRecorder {
         let inputFormat = input.outputFormat(forBus: 0)
         guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
             throw NSError(domain: "VaultoNote", code: 1, userInfo: [
-                NSLocalizedDescriptionKey: "Микрофон недоступен",
+                NSLocalizedDescriptionKey: L10n.t("error.mic_unavailable"),
             ])
         }
         converter = AVAudioConverter(from: inputFormat, to: Self.targetFormat)

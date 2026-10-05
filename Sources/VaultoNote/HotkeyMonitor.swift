@@ -23,9 +23,9 @@ enum TriggerKey: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .rightOption: return "Правый ⌥ Option"
-        case .rightCommand: return "Правый ⌘ Command"
-        case .fn: return "Fn / 🌐"
+        case .rightOption: return L10n.t("key.right_option")
+        case .rightCommand: return L10n.t("key.right_command")
+        case .fn: return L10n.t("key.fn")
         }
     }
 }

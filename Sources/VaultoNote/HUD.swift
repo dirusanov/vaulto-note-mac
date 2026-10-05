@@ -73,10 +73,10 @@ private struct HUDView: View {
             case .recording:
                 Circle().fill(VaultoColor.error).frame(width: 10, height: 10)
                 LevelBars(level: model.level)
-                Text("Слушаю…")
+                Text(L10n.t("hud.listening"))
             case .transcribing:
                 ProgressView().controlSize(.small)
-                Text("Распознаю…")
+                Text(L10n.t("hud.transcribing"))
             case .message(let text):
                 Text(text).lineLimit(2)
             case .hidden:

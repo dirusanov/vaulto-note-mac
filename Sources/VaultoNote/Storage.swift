@@ -19,21 +19,40 @@ enum AppPaths {
 
 struct DictationLanguage {
     let code: String
-    let title: String
+    private let name: String
+
+    var title: String { code == "auto" ? L10n.t("lang.auto") : name }
 
     static let all: [DictationLanguage] = [
-        .init(code: "auto", title: "Автоопределение"),
-        .init(code: "ru", title: "Русский"),
-        .init(code: "en", title: "English"),
-        .init(code: "de", title: "Deutsch"),
-        .init(code: "uk", title: "Українська"),
-        .init(code: "es", title: "Español"),
-        .init(code: "fr", title: "Français"),
+        .init(code: "auto", name: ""),
+        .init(code: "ru", name: "Русский"),
+        .init(code: "en", name: "English"),
+        .init(code: "de", name: "Deutsch"),
+        .init(code: "uk", name: "Українська"),
+        .init(code: "es", name: "Español"),
+        .init(code: "fr", name: "Français"),
+        .init(code: "pt", name: "Português"),
+        .init(code: "zh", name: "中文"),
+        .init(code: "ja", name: "日本語"),
     ]
 }
 
 enum Settings {
     private static let defaults = UserDefaults.standard
+
+    /// "system" or an `L10n.languages` code. Also written to AppleLanguages so the
+    /// system-drawn parts (About panel, permission prompts) match after a relaunch.
+    static var interfaceLanguage: String {
+        get { defaults.string(forKey: "interfaceLanguage") ?? "system" }
+        set {
+            defaults.set(newValue, forKey: "interfaceLanguage")
+            if newValue == "system" {
+                defaults.removeObject(forKey: "AppleLanguages")
+            } else {
+                defaults.set([newValue], forKey: "AppleLanguages")
+            }
+        }
+    }
 
     static var language: String {
         get { defaults.string(forKey: "language") ?? "auto" }

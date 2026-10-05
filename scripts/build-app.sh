@@ -41,6 +41,7 @@ if [ ! -f build/AppIcon.icns ]; then
   rm -rf "$ICONSET"
 fi
 cp build/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+cp -R Resources/*.lproj "$APP/Contents/Resources/"
 
 if security find-certificate -c "$IDENTITY" >/dev/null 2>&1; then
   SIGN="$IDENTITY"

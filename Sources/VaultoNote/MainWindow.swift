@@ -9,6 +9,7 @@ final class AppStatus: ObservableObject {
     @Published var micGranted = false
     @Published var accessibilityGranted = false
     @Published var history: [HistoryEntry] = []
+    @Published var interfaceLanguage = Settings.interfaceLanguage
     @Published var language = Settings.language
     @Published var triggerKey = Settings.triggerKey
     @Published var modelID = Settings.modelID
@@ -24,6 +25,7 @@ final class AppStatus: ObservableObject {
 struct WindowActions {
     var requestMicrophone: () -> Void
     var requestAccessibility: () -> Void
+    var selectInterfaceLanguage: (String) -> Void
     var selectLanguage: (String) -> Void
     var selectTriggerKey: (TriggerKey) -> Void
     var selectModel: (String) -> Void
@@ -85,6 +87,9 @@ private struct MainView: View {
         .foregroundStyle(VaultoColor.text)
         .tint(VaultoColor.primary)
         .frame(minWidth: 420, minHeight: 480)
+        .environment(\.locale, L10n.locale)
+        // Re-render every string when the interface language changes.
+        .id(status.interfaceLanguage)
         .onReceive(timer) { _ in status.refreshPermissions() }
     }
 
@@ -112,19 +117,19 @@ private struct MainView: View {
 
     private var permissions: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Нужны разрешения").font(VaultoFont.sectionTitle)
+            Text(L10n.t("window.permissions_needed")).font(VaultoFont.sectionTitle)
             permissionRow(
                 icon: "mic.fill",
-                title: "Микрофон",
-                detail: "Чтобы слышать речь",
+                title: L10n.t("window.mic"),
+                detail: L10n.t("window.mic_detail"),
                 granted: status.micGranted,
                 action: actions.requestMicrophone
             )
             Divider().overlay(VaultoColor.border)
             permissionRow(
                 icon: "keyboard",
-                title: "Универсальный доступ",
-                detail: "Чтобы ловить клавишу в других приложениях и вставлять текст",
+                title: L10n.t("window.accessibility"),
+                detail: L10n.t("window.accessibility_detail"),
                 granted: status.accessibilityGranted,
                 action: actions.requestAccessibility
             )
@@ -144,7 +149,7 @@ private struct MainView: View {
             if granted {
                 Image(systemName: "checkmark.circle.fill").foregroundStyle(VaultoColor.success)
             } else {
-                Button("Разрешить", action: action).buttonStyle(VaultoPrimaryButton())
+                Button(L10n.t("window.allow"), action: action).buttonStyle(VaultoPrimaryButton())
             }
         }
     }
@@ -153,13 +158,11 @@ private struct MainView: View {
         HStack(alignment: .top, spacing: 12) {
             IconBadge(systemName: "waveform", tint: VaultoColor.primary)
             VStack(alignment: .leading, spacing: 4) {
-                Text("Как пользоваться").font(VaultoFont.sectionTitle)
-                (Text("Поставьте курсор в любое поле, удерживайте ")
-                    + Text(status.triggerKey.title).bold().foregroundColor(VaultoColor.primary)
-                    + Text(" и говорите. Отпустите — текст появится в поле."))
+                Text(L10n.t("window.howto_title")).font(VaultoFont.sectionTitle)
+                howToBody
                     .font(VaultoFont.body)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Короткое нажатие или клавиша вместе с буквой не запускают запись.")
+                Text(L10n.t("window.howto_note"))
                     .font(VaultoFont.caption)
                     .foregroundStyle(VaultoColor.textTertiary)
             }
@@ -167,32 +170,51 @@ private struct MainView: View {
         .vaultoCard()
     }
 
+    /// The localized sentence with the key name highlighted in place of %@.
+    private var howToBody: Text {
+        let marker = "\u{1}"
+        let parts = L10n.t("window.howto_body", marker).components(separatedBy: marker)
+        let key = Text(status.triggerKey.title).bold().foregroundColor(VaultoColor.primary)
+        guard parts.count == 2 else { return Text(L10n.t("window.howto_body", status.triggerKey.title)) }
+        return Text(parts[0]) + key + Text(parts[1])
+    }
+
     private var settings: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Настройки").font(VaultoFont.sectionTitle).padding(.bottom, 8)
-            settingRow("Язык", icon: "globe") {
+            Text(L10n.t("settings.title")).font(VaultoFont.sectionTitle).padding(.bottom, 8)
+            settingRow(L10n.t("settings.interface_language"), icon: "character.bubble") {
+                Picker("", selection: Binding(
+                    get: { status.interfaceLanguage },
+                    set: { actions.selectInterfaceLanguage($0) }
+                )) {
+                    Text(L10n.t("lang.system", L10n.name(of: L10n.systemLanguage))).tag("system")
+                    Divider()
+                    ForEach(L10n.languages, id: \.code) { Text($0.name).tag($0.code) }
+                }
+            }
+            settingRow(L10n.t("settings.speech_language"), icon: "waveform") {
                 Picker("", selection: Binding(get: { status.language }, set: { actions.selectLanguage($0) })) {
                     ForEach(DictationLanguage.all, id: \.code) { Text($0.title).tag($0.code) }
                 }
             }
-            settingRow("Клавиша", icon: "command") {
+            settingRow(L10n.t("settings.key"), icon: "command") {
                 Picker("", selection: Binding(get: { status.triggerKey }, set: { actions.selectTriggerKey($0) })) {
                     ForEach(TriggerKey.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
             }
-            settingRow("Модель", icon: "cpu") {
+            settingRow(L10n.t("settings.model"), icon: "cpu") {
                 Picker("", selection: Binding(get: { status.modelID }, set: { actions.selectModel($0) })) {
                     ForEach(WhisperModel.all, id: \.id) { model in
-                        Text("\(model.title) (\(model.sizeLabel))\(model.isDownloaded ? "" : " — скачать")")
+                        Text("\(model.title) (\(model.sizeLabel))\(model.isDownloaded ? "" : L10n.t("model.download_suffix"))")
                             .tag(model.id)
                     }
                 }
             }
-            settingRow("Пробел после текста", icon: "space") {
+            settingRow(L10n.t("settings.trailing_space"), icon: "space") {
                 Toggle("", isOn: Binding(get: { status.trailingSpace }, set: { actions.setTrailingSpace($0) }))
                     .toggleStyle(.switch)
             }
-            settingRow("Иконка в Dock", icon: "dock.rectangle", isLast: true) {
+            settingRow(L10n.t("settings.dock_icon"), icon: "dock.rectangle", isLast: true) {
                 Toggle("", isOn: Binding(get: { status.showInDock }, set: { actions.setShowInDock($0) }))
                     .toggleStyle(.switch)
             }
@@ -221,7 +243,7 @@ private struct MainView: View {
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("История").font(VaultoFont.sectionTitle)
+                Text(L10n.t("window.history")).font(VaultoFont.sectionTitle)
                 if !status.history.isEmpty {
                     Text("\(status.history.count)")
                         .font(VaultoFont.captionBold)
@@ -232,7 +254,7 @@ private struct MainView: View {
                 }
                 Spacer()
                 if !status.history.isEmpty {
-                    Button("Очистить", action: actions.clearHistory)
+                    Button(L10n.t("window.clear"), action: actions.clearHistory)
                         .buttonStyle(.plain)
                         .font(VaultoFont.captionBold)
                         .foregroundStyle(VaultoColor.error)
@@ -243,7 +265,7 @@ private struct MainView: View {
                     Image(systemName: "mic")
                         .font(.system(size: 28))
                         .foregroundStyle(VaultoColor.textTertiary)
-                    Text("Здесь появятся ваши диктовки")
+                    Text(L10n.t("window.history_empty"))
                         .font(VaultoFont.body)
                         .foregroundStyle(VaultoColor.textSecondary)
                 }
@@ -290,7 +312,7 @@ private struct HistoryRow: View {
                     Text("·")
                     Text(entry.language.uppercased())
                     Text("·")
-                    Text(String(format: "%.0f с", entry.audioSeconds))
+                    Text(L10n.t("unit.seconds", Int(entry.audioSeconds.rounded())))
                 }
                 .font(VaultoFont.caption)
                 .foregroundStyle(VaultoColor.textTertiary)
@@ -308,7 +330,7 @@ private struct HistoryRow: View {
                     .background(RoundedRectangle(cornerRadius: 8).fill(VaultoColor.backgroundSecondary))
             }
             .buttonStyle(.plain)
-            .help("Скопировать")
+            .help(L10n.t("window.copy"))
         }
         .padding(16)
         .background(RoundedRectangle(cornerRadius: 16).fill(VaultoColor.surface))

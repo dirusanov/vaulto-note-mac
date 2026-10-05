@@ -15,9 +15,9 @@ enum WhisperError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .modelNotLoaded: return "Модель не загружена"
-        case .loadFailed(let path): return "Не удалось загрузить модель: \(path)"
-        case .transcriptionFailed(let code): return "Ошибка распознавания (код \(code))"
+        case .modelNotLoaded: return L10n.t("error.model_not_loaded")
+        case .loadFailed(let path): return L10n.t("error.load_failed", path)
+        case .transcriptionFailed(let code): return L10n.t("error.transcription_failed", Int(code))
         }
     }
 }

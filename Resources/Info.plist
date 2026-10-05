@@ -3,7 +3,18 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>ru</string>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ru</string>
+		<string>de</string>
+		<string>es</string>
+		<string>fr</string>
+		<string>pt</string>
+		<string>zh-Hans</string>
+		<string>ja</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Vaulto Note</string>
 	<key>CFBundleExecutable</key>
@@ -27,6 +38,6 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Vaulto Note записывает речь, пока вы удерживаете клавишу диктовки, и распознаёт её локально на этом Mac.</string>
+	<string>Vaulto Note records speech while you hold the dictation key and transcribes it locally on this Mac.</string>
 </dict>
 </plist>
