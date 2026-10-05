@@ -958,6 +958,7 @@ struct GeneralPage: View {
                     Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")
                         .foregroundStyle(VaultoColor.textSecondary)
                 }
+                UpdateSettings(updates: app.updates)
             }
         }
         .formStyle(.grouped)
@@ -976,6 +977,23 @@ struct GeneralPage: View {
             }
         } label: {
             RowLabel(title: title, detail: detail)
+        }
+    }
+}
+
+
+private struct UpdateSettings: View {
+    @ObservedObject var updates: UpdateManager
+
+    var body: some View {
+        Toggle(isOn: Binding(get: { updates.automaticallyChecksForUpdates },
+                             set: { updates.setAutomaticChecks($0) })) {
+            RowLabel(title: L10n.t("general.auto_updates"), detail: L10n.t("general.updates_detail"))
+        }
+        .disabled(!updates.isStarted)
+        LabeledContent(L10n.t("general.updates")) {
+            Button(L10n.t("general.check_updates")) { updates.checkForUpdates() }
+                .disabled(!updates.canCheckForUpdates)
         }
     }
 }

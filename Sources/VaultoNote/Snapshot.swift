@@ -22,6 +22,11 @@ enum Snapshot {
                         let name = "\(language)-\(appearanceName)-\(page.rawValue)\(setupDone ? "" : "-setup").png"
                         render(RootView(app: app), size: NSSize(width: 920, height: 640),
                                appearance: appearance, to: directory.appendingPathComponent(name))
+                        if page == .general {
+                            render(RootView(app: app), size: NSSize(width: 920, height: 1200),
+                                   appearance: appearance,
+                                   to: directory.appendingPathComponent("\(language)-\(appearanceName)-general-full.png"))
+                        }
                     }
                 }
                 for (suffix, recording, result) in [("recording", true, nil as String?),
@@ -38,6 +43,20 @@ enum Snapshot {
                     render(OnboardingView(app: fresh, step: step) {}, size: NSSize(width: 600, height: 560),
                            appearance: appearance,
                            to: directory.appendingPathComponent("\(language)-\(appearanceName)-onboarding-\(step.rawValue).png"))
+                }
+                let practiceStates: [(String, AppController.ModelState, String?)] = [
+                    ("preparing", .loading, nil),
+                    ("ready", .ready, nil),
+                    ("download-error", .notLoaded, L10n.t("model.download_error", "HTTP 503")),
+                    ("load-error", .failed(L10n.t("error.load_failed", "Whisper")), nil),
+                ]
+                for (name, state, downloadError) in practiceStates {
+                    let app = AppController()
+                    app.applyPreviewState(setupDone: false)
+                    app.applyPreviewModelState(state, downloadError: downloadError)
+                    render(OnboardingView(app: app, step: .practice) {}, size: NSSize(width: 600, height: 560),
+                           appearance: appearance,
+                           to: directory.appendingPathComponent("\(language)-\(appearanceName)-onboarding-practice-\(name).png"))
                 }
                 let hud = HUDModel()
                 hud.state = .recording(started: Date().addingTimeInterval(-7))

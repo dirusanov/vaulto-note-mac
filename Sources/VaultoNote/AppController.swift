@@ -24,6 +24,8 @@ final class AppController: ObservableObject {
         case failed(String)
     }
 
+    let updates = UpdateManager()
+
     // MARK: Runtime state
 
     @Published private(set) var phase = Phase.idle
@@ -428,6 +430,13 @@ final class AppController: ObservableObject {
             TextInserter.copy(entry.text)
             hud.show(.message(L10n.t("hud.copied")))
         }
+    }
+
+    /// Snapshot-only: shows practice waiting, ready, or failed without network requests.
+    func applyPreviewModelState(_ state: ModelState, downloadError: String? = nil) {
+        modelState = state
+        downloadingModelID = nil
+        self.downloadError = downloadError
     }
 
     /// Snapshot-only: shows the record button mid-recording or with a result.

@@ -27,6 +27,8 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Frameworks" "$APP/Contents/Resources"
 cp "$BIN/VaultoNote" "$APP/Contents/MacOS/VaultoNote"
 cp -R "$BIN/whisper.framework" "$APP/Contents/Frameworks/"
+ditto "$ROOT/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework" \
+  "$APP/Contents/Frameworks/Sparkle.framework"
 sed "s/__VERSION__/$VERSION/g" Resources/Info.plist > "$APP/Contents/Info.plist"
 
 # App icon: the mobile app's glyph on Apple's icon grid (scripts/make-icon.swift).
@@ -50,8 +52,16 @@ else
   SIGN="-"
 fi
 codesign --force --sign "$SIGN" "$APP/Contents/Frameworks/whisper.framework"
+# Sparkle's installer and downloader must retain their entitlements and be
+# signed from the inside out. --deep signing can silently break the helpers.
+SPARKLE="$APP/Contents/Frameworks/Sparkle.framework"
+codesign --force --sign "$SIGN" --options runtime "$SPARKLE/Versions/B/XPCServices/Installer.xpc"
+codesign --force --sign "$SIGN" --options runtime --preserve-metadata=entitlements "$SPARKLE/Versions/B/XPCServices/Downloader.xpc"
+codesign --force --sign "$SIGN" --options runtime "$SPARKLE/Versions/B/Autoupdate"
+codesign --force --sign "$SIGN" --options runtime "$SPARKLE/Versions/B/Updater.app"
+codesign --force --sign "$SIGN" --options runtime "$SPARKLE"
 codesign --force --sign "$SIGN" --identifier com.vaultonote.mac "$APP"
-codesign --verify --strict "$APP"
+codesign --verify --deep --strict "$APP"
 echo "Built $APP ($VERSION, signed: $SIGN)"
 
 if [ "${1:-}" = "--install" ]; then

@@ -100,6 +100,14 @@ The speech model (about 1.6 GB) downloads once during setup; after that everythi
 
 **Requirements:** macOS 14 Sonoma or later, Apple Silicon (M1 or newer), ~2 GB of free space.
 
+## Updates
+
+Starting with **0.1.1**, Vaulto Note checks for updates daily while running. When a new version is available, click **Update** in the notification window: the app downloads and verifies the update, installs it, and restarts. A restart waits for any dictation or model download/preparation to finish.
+
+You can also choose **Check for updates…** from the Vaulto Note menu, the menu bar, or **Settings → General**. Automatic checks can be disabled there. Models, dictation history and preferences are preserved; the speech model does not need downloading again.
+
+**Already on 0.1.0?** Install the latest DMG once and replace the old app in Applications. That version has no updater, so it cannot bootstrap itself. Future updates then happen inside the app. See [release setup](docs/updates.md) for signing and publication instructions.
+
 ## How it works
 
 ```
@@ -108,7 +116,7 @@ The speech model (about 1.6 GB) downloads once during setup; after that everythi
 
 - **Microphone** is on only while you record; macOS shows its orange indicator.
 - **Accessibility** lets the app notice your shortcut in other apps and paste with ⌘V. It doesn't read your screen or keystrokes beyond the shortcut.
-- The only network request is downloading the model from [Hugging Face](https://huggingface.co/ggerganov/whisper.cpp).
+- The app downloads its model from [Hugging Face](https://huggingface.co/ggerganov/whisper.cpp) and checks for signed app updates on GitHub. Dictation audio and text stay on this Mac.
 - History is a local JSON file in `~/Library/Application Support/VaultoNote/`.
 
 ## Models
@@ -164,13 +172,13 @@ git clone https://github.com/dirusanov/vaulto-note-mac.git
 cd vaulto-note-mac
 scripts/create-dev-cert.sh        # once: stable signing identity, keeps permissions across rebuilds
 scripts/build-app.sh --install    # builds and copies to ~/Applications
-scripts/package-release.sh        # release .dmg (drag-to-Applications window) and .zip
+scripts/package-release.sh        # signed update feed, .dmg and .zip (release Keychain key required)
 ```
 
 Needs Xcode (used via `DEVELOPER_DIR`). The prebuilt whisper.cpp XCFramework is downloaded on first build.
 
 ```bash
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test   # 25 tests incl. end-to-end transcription
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test   # tests incl. end-to-end transcription
 "build/Vaulto Note.app/Contents/MacOS/VaultoNote" --snapshot /tmp/snap en ru de   # render every screen to PNG
 "build/Vaulto Note.app/Contents/MacOS/VaultoNote" --transcribe speech.wav ru       # headless transcription
 ```
@@ -179,6 +187,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test   # 25 tests
 <summary>Code layout</summary>
 
 - `AppController` — app state and the dictation pipeline; the UI binds to it
+- `UpdateManager` — Sparkle update checks, installation and safe restart
 - `WhisperEngine` — whisper.cpp wrapper, serialized on one queue
 - `AudioRecorder` — AVAudioEngine → 16 kHz mono Float32
 - `Hotkeys` — shortcut model, hold/tap/toggle state machine, `flagsChanged` + Carbon hot keys
@@ -191,6 +200,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test   # 25 tests
 ## Roadmap
 
 - [ ] Notarized builds and Homebrew cask
+- [x] Automatic app updates (Sparkle)
 - [ ] Sync dictations with the Vaulto Note mobile app (end-to-end encrypted)
 - [ ] Optional AI cleanup of filler words
 - [ ] Pause media while recording

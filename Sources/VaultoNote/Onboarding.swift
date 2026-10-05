@@ -321,6 +321,25 @@ private struct ShortcutStep: View {
     }
 }
 
+/// The practice prompt must not promise dictation before the model is usable.
+enum PracticeModelStatus: Equatable {
+    case waiting, downloading, preparing, ready, failed(String)
+
+    init(modelState: AppController.ModelState, downloading: Bool, downloadError: String?) {
+        if downloading {
+            self = .downloading
+        } else {
+            switch modelState {
+            case .ready: self = .ready
+            case .loading: self = .preparing
+            case .failed(let message): self = .failed(message)
+            case .notLoaded:
+                self = downloadError.map { .failed($0) } ?? .waiting
+            }
+        }
+    }
+}
+
 private struct PracticeStep: View {
     @ObservedObject var app: AppController
     let finish: () -> Void
@@ -329,35 +348,61 @@ private struct PracticeStep: View {
     @FocusState private var focused: Bool
 
     private var succeeded: Bool { app.history.count > startCount }
+    private var readiness: PracticeModelStatus {
+        PracticeModelStatus(modelState: app.modelState, downloading: app.downloadingModelID != nil,
+                            downloadError: app.downloadError)
+    }
+    private var canPractice: Bool { readiness == .ready }
+
+    private var title: String {
+        if succeeded { return L10n.t("onboarding.practice_done") }
+        switch readiness {
+        case .ready: return L10n.t("onboarding.practice_title")
+        case .failed: return L10n.t("onboarding.model_failed_title")
+        case .waiting, .downloading, .preparing: return L10n.t("onboarding.model_wait_title")
+        }
+    }
+
+    private var explanation: String {
+        if succeeded { return L10n.t("onboarding.practice_done_text") }
+        switch readiness {
+        case .ready: return L10n.t("onboarding.practice_text", app.shortcut.inlineTitle)
+        case .preparing: return L10n.t("onboarding.model_preparing")
+        case .failed: return L10n.t("onboarding.model_failed_text")
+        case .waiting, .downloading:
+            let model = WhisperModel.find(app.downloadingModelID ?? app.selectedModelID)
+            return L10n.t("onboarding.model_wait_text", model.sizeLabel)
+        }
+    }
 
     var body: some View {
-        StepLayout(icon: succeeded ? "checkmark" : "waveform",
+        StepLayout(icon: succeeded ? "checkmark" : (canPractice ? "waveform" : "arrow.down.circle"),
                    iconColor: succeeded ? VaultoColor.success : VaultoColor.primary,
-                   title: succeeded ? L10n.t("onboarding.practice_done") : L10n.t("onboarding.practice_title"),
-                   text: succeeded ? L10n.t("onboarding.practice_done_text") :
-                       L10n.t("onboarding.practice_text", app.shortcut.inlineTitle)) {
+                   title: title, text: explanation) {
             VStack(spacing: 14) {
-                TextEditor(text: $text)
-                    .font(.system(size: 15))
-                    .scrollContentBackground(.hidden)
-                    .focused($focused)
-                    .padding(10)
-                    .frame(height: 96)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(VaultoColor.surface))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(focused ? VaultoColor.primary : VaultoColor.border, lineWidth: focused ? 1.5 : 1)
-                    )
-                    .overlay(alignment: .topLeading) {
-                        if text.isEmpty {
-                            Text(L10n.t("onboarding.practice_placeholder"))
-                                .font(.system(size: 15))
-                                .foregroundStyle(VaultoColor.textTertiary)
-                                .padding(.horizontal, 15)
-                                .padding(.vertical, 10)
-                                .allowsHitTesting(false)
+                if canPractice || succeeded {
+                    TextEditor(text: $text)
+                        .font(.system(size: 15))
+                        .scrollContentBackground(.hidden)
+                        .focused($focused)
+                        .padding(10)
+                        .frame(height: 96)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(VaultoColor.surface))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(focused ? VaultoColor.primary : VaultoColor.border, lineWidth: focused ? 1.5 : 1)
+                        )
+                        .overlay(alignment: .topLeading) {
+                            if text.isEmpty {
+                                Text(L10n.t("onboarding.practice_placeholder"))
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(VaultoColor.textTertiary)
+                                    .padding(.horizontal, 15)
+                                    .padding(.vertical, 10)
+                                    .allowsHitTesting(false)
+                            }
                         }
-                    }
+                }
                 modelStatus
                 if succeeded {
                     BigButton(title: L10n.t("onboarding.finish"), action: finish)
@@ -370,29 +415,41 @@ private struct PracticeStep: View {
         }
         .onAppear {
             startCount = app.history.count
-            focused = true
+            focused = canPractice
+        }
+        .onChange(of: canPractice) { _, ready in
+            focused = ready
         }
     }
 
     @ViewBuilder
     private var modelStatus: some View {
-        if app.downloadingModelID != nil {
-            HStack(spacing: 10) {
-                ProgressView(value: app.downloadProgress).frame(width: 160)
+        switch readiness {
+        case .downloading:
+            VStack(spacing: 10) {
+                ProgressView(value: app.downloadProgress).frame(maxWidth: 280)
                 Text(L10n.t("onboarding.model_downloading", Int(app.downloadProgress * 100)))
                     .font(.system(size: 12))
                     .monospacedDigit()
                     .foregroundStyle(VaultoColor.textSecondary)
             }
-        } else if app.modelState == .loading {
-            HStack(spacing: 8) {
-                ProgressView().controlSize(.small)
-                Text(L10n.t("onboarding.model_preparing"))
+        case .preparing:
+            ProgressView().controlSize(.small)
+        case .failed(let message):
+            VStack(spacing: 14) {
+                Text(message)
                     .font(.system(size: 12))
-                    .foregroundStyle(VaultoColor.textSecondary)
+                    .foregroundStyle(VaultoColor.error)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                BigButton(title: L10n.t("onboarding.model_retry")) {
+                    app.selectModel(app.selectedModel)
+                }
             }
-        } else if case .failed(let message) = app.modelState {
-            Text(message).font(.system(size: 12)).foregroundStyle(VaultoColor.error)
+        case .waiting:
+            BigButton(title: L10n.t("onboarding.model_retry"), action: app.prepareModel)
+        case .ready:
+            EmptyView()
         }
     }
 }

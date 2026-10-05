@@ -4,12 +4,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let app = AppController()
     private lazy var mainWindow = MainWindowController(app: app)
     private lazy var onboarding = OnboardingWindowController(app: app) { [weak self] in
-        self?.mainWindow.show(page: .home)
+        guard let self else { return }
+        self.mainWindow.show(page: .home)
+        self.app.updates.start(app: self.app)
     }
     private var statusItem: NSStatusItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.mainMenu = Self.makeMainMenu()
+        NSApp.mainMenu = Self.makeMainMenu(updates: app.updates)
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         let menu = NSMenu()
@@ -18,7 +20,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updateIcon(.idle)
 
         app.onPhaseChange = { [weak self] in self?.updateIcon($0) }
-        app.onInterfaceLanguageChange = { NSApp.mainMenu = Self.makeMainMenu() }
+        app.onInterfaceLanguageChange = { [weak self] in
+            guard let self else { return }
+            NSApp.mainMenu = Self.makeMainMenu(updates: self.app.updates)
+        }
         app.onDockVisibilityChange = { [weak self] show in
             NSApp.setActivationPolicy(show ? .regular : .accessory)
             // Switching to .accessory hides the window along with the app; keep it on screen.
@@ -29,8 +34,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         if !Settings.onboardingDone {
             onboarding.show()
-        } else if !Self.launchedAsLoginItem {
-            mainWindow.show()
+        } else {
+            app.updates.start(app: app)
+            if !Self.launchedAsLoginItem { mainWindow.show() }
         }
     }
 
@@ -112,6 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         menu.addItem(item(L10n.t("menu.open_window"), #selector(openMainWindow), key: "o"))
         menu.addItem(item(L10n.t("menu.settings"), #selector(openSettings), key: ","))
+        menu.addItem(Self.updateMenuItem(app.updates))
         menu.addItem(item(L10n.t("menu.quit"), #selector(NSApplication.terminate(_:)), key: "q"))
     }
 
@@ -157,12 +164,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: - Main menu
 
     /// Standard app menu so ⌘Q, ⌘W, ⌘C work while the app is in the Dock.
-    private static func makeMainMenu() -> NSMenu {
+    private static func makeMainMenu(updates: UpdateManager) -> NSMenu {
         let main = NSMenu()
 
         let appMenu = NSMenu()
         appMenu.addItem(withTitle: L10n.t("mainmenu.about"),
                         action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(updateMenuItem(updates))
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: L10n.t("mainmenu.hide"), action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(withTitle: L10n.t("mainmenu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -183,6 +191,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         main.addItem(submenuItem(L10n.t("mainmenu.window"), windowMenu))
 
         return main
+    }
+
+    private static func updateMenuItem(_ updates: UpdateManager) -> NSMenuItem {
+        let item = NSMenuItem(title: L10n.t("general.check_updates"),
+                              action: #selector(UpdateManager.checkForUpdates(_:)), keyEquivalent: "")
+        item.target = updates
+        return item
     }
 
     private static func submenuItem(_ title: String, _ menu: NSMenu) -> NSMenuItem {

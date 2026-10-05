@@ -611,6 +611,28 @@ enum L10n {
         "shortcut.other": row([
             "Other…", "Другая…", "Andere…", "Otra…", "Autre…", "Outra…", "其他…", "その他…",
         ]),
+        "onboarding.model_wait_title": row([
+            "Please wait", "Пожалуйста, подождите", "Bitte warten", "Espera un momento", "Veuillez patienter", "Aguarde um momento", "请稍候", "しばらくお待ちください",
+        ]),
+        "onboarding.model_wait_text": row([
+            "Downloading the speech model (%@). This is a one-time download; dictation will work offline afterward. You can try it as soon as it is ready.",
+            "Скачивается модель распознавания (%@). Это нужно только один раз; затем диктовка работает без интернета. Попробовать можно будет сразу после подготовки.",
+            "Das Sprachmodell (%@) wird heruntergeladen. Das ist nur einmal nötig; danach funktioniert das Diktieren offline. Sobald es bereit ist, können Sie es ausprobieren.",
+            "Se está descargando el modelo de voz (%@). Solo se descarga una vez; después el dictado funciona sin internet. Podrás probarlo cuando esté listo.",
+            "Téléchargement du modèle vocal (%@). Il ne se télécharge qu'une fois ; la dictée fonctionnera ensuite hors ligne. Vous pourrez l'essayer dès qu'il sera prêt.",
+            "Baixando o modelo de voz (%@). Isso só é necessário uma vez; depois o ditado funciona sem internet. Você poderá experimentar quando estiver pronto.",
+            "正在下载语音模型（%@）。只需下载一次，之后即可离线听写。准备好后就可以试用了。",
+            "音声モデル（%@）をダウンロードしています。ダウンロードは一度だけで、その後はオフラインで音声入力できます。準備ができたらお試しいただけます。",
+        ]),
+        "onboarding.model_failed_title": row([
+            "Setup needs another try", "Попробуем ещё раз", "Einrichtung erneut versuchen", "Vuelve a intentar la configuración", "Réessayons la préparation", "Vamos tentar novamente", "请重试设置", "もう一度準備しましょう",
+        ]),
+        "onboarding.model_failed_text": row([
+            "The speech model isn't ready yet. Check the message below and try again.", "Модель распознавания пока не готова. Посмотрите сообщение ниже и повторите попытку.", "Das Sprachmodell ist noch nicht bereit. Prüfen Sie die Meldung unten und versuchen Sie es erneut.", "El modelo de voz aún no está listo. Revisa el mensaje de abajo y vuelve a intentarlo.", "Le modèle vocal n'est pas encore prêt. Consultez le message ci-dessous et réessayez.", "O modelo de voz ainda não está pronto. Veja a mensagem abaixo e tente novamente.", "语音模型尚未准备好。请查看下方提示后重试。", "音声モデルの準備ができていません。下のメッセージを確認して、もう一度お試しください。",
+        ]),
+        "onboarding.model_retry": row([
+            "Try again", "Повторить попытку", "Erneut versuchen", "Volver a intentar", "Réessayer", "Tentar novamente", "重试", "再試行",
+        ]),
         "onboarding.practice_title": row([
             "Try it now", "Попробуйте", "Jetzt ausprobieren", "Pruébalo ahora", "Essayez maintenant", "Experimente agora", "现在试试", "試してみましょう",
         ]),
@@ -646,6 +668,25 @@ enum L10n {
         ]),
         "shortcut.paste_last_detail": row([
             "If the text went to the wrong place, put the cursor where it belongs and press this", "Если текст ушёл не туда, поставьте курсор куда нужно и нажмите это сочетание", "Falls der Text am falschen Ort gelandet ist: Cursor setzen und diese Tasten drücken", "Si el texto fue a otro sitio, coloca el cursor donde debe ir y pulsa este atajo", "Si le texte est parti ailleurs, placez le curseur au bon endroit et appuyez sur ce raccourci", "Se o texto foi para o lugar errado, coloque o cursor no lugar certo e pressione este atalho", "如果文字插错了位置，把光标放到正确位置后按此快捷键", "別の場所に入力された場合は、カーソルを正しい位置に置いてこのキーを押します",
+        ]),
+        "general.updates": row([
+            "Updates", "Обновления", "Updates", "Actualizaciones", "Mises à jour", "Atualizações", "更新", "アップデート",
+        ]),
+        "general.check_updates": row([
+            "Check for updates…", "Проверить обновления…", "Nach Updates suchen…", "Buscar actualizaciones…", "Rechercher des mises à jour…", "Verificar atualizações…", "检查更新…", "アップデートを確認…",
+        ]),
+        "general.auto_updates": row([
+            "Automatically check for updates", "Проверять обновления автоматически", "Automatisch nach Updates suchen", "Buscar actualizaciones automáticamente", "Rechercher automatiquement les mises à jour", "Verificar atualizações automaticamente", "自动检查更新", "アップデートを自動で確認",
+        ]),
+        "general.updates_detail": row([
+            "Check daily and notify when a new version is ready. Click Update to download, install and restart. Your models and history are kept.",
+            "Проверять каждый день и сообщать о новой версии. Нажмите «Обновить» — приложение скачается, установится и перезапустится. Модели и история сохранятся.",
+            "Täglich prüfen und neue Versionen melden. Klicken Sie auf Aktualisieren, um die App herunterzuladen, zu installieren und neu zu starten. Modelle und Verlauf bleiben erhalten.",
+            "Comprobar a diario y avisar de nuevas versiones. Pulsa Actualizar para descargar, instalar y reiniciar. Tus modelos e historial se conservan.",
+            "Vérifier chaque jour et signaler les nouvelles versions. Cliquez sur Mettre à jour pour télécharger, installer et redémarrer. Vos modèles et votre historique sont conservés.",
+            "Verificar diariamente e avisar sobre novas versões. Clique em Atualizar para baixar, instalar e reiniciar. Seus modelos e histórico são preservados.",
+            "每天检查并通知新版本。点击“更新”即可下载、安装并重新启动。模型和历史记录会保留。",
+            "毎日確認し、新しいバージョンを通知します。「アップデート」をクリックすると、ダウンロード、インストール、再起動します。モデルと履歴は保持されます。",
         ]),
         "general.welcome_again": row([
             "Welcome guide", "Приветствие и настройка", "Einführung", "Guía de bienvenida", "Guide de bienvenue", "Guia de boas-vindas", "欢迎向导", "ようこそガイド",
