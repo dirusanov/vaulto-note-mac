@@ -8,6 +8,7 @@
 # otherwise ad-hoc. With ad-hoc signing macOS treats every rebuild as a new app and
 # asks for Accessibility again.
 set -euo pipefail
+umask 022
 
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
@@ -44,6 +45,10 @@ if [ ! -f build/AppIcon.icns ] || [ Resources/AppIcon-1024.png -nt build/AppIcon
 fi
 cp build/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 cp -R Resources/*.lproj "$APP/Contents/Resources/"
+
+# A signing job may run under a private umask (077), including the Swift build
+# cache. Public app bundles must remain readable/executable for other Mac users.
+chmod -R go-w,a+rX "$APP"
 
 if security find-certificate -c "$IDENTITY" >/dev/null 2>&1; then
   SIGN="$IDENTITY"
