@@ -11,6 +11,26 @@ enum TextInserter {
         return AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
     }
 
+    /// False only when nothing that could take text has focus (the desktop, a list,
+    /// a button), so ⌘V would go nowhere and the dictation would be lost. Unknown
+    /// cases count as text fields: a wrong "no" is worse than a wrong "yes".
+    static var hasFocusedTextField: Bool {
+        let system = AXUIElementCreateSystemWide()
+        var focused: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(system, kAXFocusedUIElementAttribute as CFString, &focused)
+        if result == .noValue { return false }
+        guard result == .success, let focused, CFGetTypeID(focused) == AXUIElementGetTypeID() else { return true }
+
+        var role: CFTypeRef?
+        AXUIElementCopyAttributeValue(focused as! AXUIElement, kAXRoleAttribute as CFString, &role)
+        let nonText: Set<String> = [
+            kAXListRole, kAXOutlineRole, kAXTableRole, kAXButtonRole, kAXImageRole, kAXWindowRole,
+            kAXSheetRole, kAXMenuBarRole, kAXCheckBoxRole, kAXRadioButtonRole, kAXApplicationRole,
+        ]
+        guard let role = role as? String else { return true }
+        return !nonText.contains(role)
+    }
+
     static func openAccessibilitySettings() {
         let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
         NSWorkspace.shared.open(url)

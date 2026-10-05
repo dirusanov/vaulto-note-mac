@@ -288,7 +288,11 @@ final class HotkeyMonitor {
         ]
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
         InstallEventHandler(GetApplicationEventTarget(), { _, event, userData in
-            guard let event, let userData else { return noErr }
+            guard let event, let userData else { return OSStatus(eventNotHandledErr) }
+            var hotKeyID = EventHotKeyID()
+            GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                              nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
+            guard hotKeyID.id == 1 else { return OSStatus(eventNotHandledErr) }
             let monitor = Unmanaged<HotkeyMonitor>.fromOpaque(userData).takeUnretainedValue()
             guard !monitor.isSuspended else { return noErr }
             if GetEventKind(event) == UInt32(kEventHotKeyPressed) {
@@ -301,5 +305,51 @@ final class HotkeyMonitor {
 
         let id = EventHotKeyID(signature: OSType(0x564E_5445), id: 1) // 'VNTE'
         RegisterEventHotKey(keyCode, carbonModifiers, id, GetApplicationEventTarget(), 0, &hotKeyRef)
+    }
+}
+
+/// A plain press-only global hot key (used for "paste last dictation").
+final class CarbonHotKey {
+    var onPress: (() -> Void)?
+    private let id: UInt32
+    private var hotKeyRef: EventHotKeyRef?
+    private var handlerRef: EventHandlerRef?
+
+    init(id: UInt32) {
+        self.id = id
+    }
+
+    deinit { unregister() }
+
+    func register(keyCode: UInt32, modifiers: NSEvent.ModifierFlags) {
+        unregister()
+        var carbonModifiers: UInt32 = 0
+        if modifiers.contains(.command) { carbonModifiers |= UInt32(cmdKey) }
+        if modifiers.contains(.option) { carbonModifiers |= UInt32(optionKey) }
+        if modifiers.contains(.control) { carbonModifiers |= UInt32(controlKey) }
+        if modifiers.contains(.shift) { carbonModifiers |= UInt32(shiftKey) }
+
+        var type = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+        let selfPtr = Unmanaged.passUnretained(self).toOpaque()
+        InstallEventHandler(GetApplicationEventTarget(), { _, event, userData in
+            guard let event, let userData else { return OSStatus(eventNotHandledErr) }
+            var hotKeyID = EventHotKeyID()
+            GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                              nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
+            let hotKey = Unmanaged<CarbonHotKey>.fromOpaque(userData).takeUnretainedValue()
+            // Handlers are chained; let other hot keys' events pass through.
+            guard hotKeyID.id == hotKey.id else { return OSStatus(eventNotHandledErr) }
+            hotKey.onPress?()
+            return noErr
+        }, 1, &type, selfPtr, &handlerRef)
+        let hotKeyID = EventHotKeyID(signature: OSType(0x564E_5445), id: id)
+        RegisterEventHotKey(keyCode, carbonModifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
+    }
+
+    func unregister() {
+        if let hotKeyRef { UnregisterEventHotKey(hotKeyRef) }
+        if let handlerRef { RemoveEventHandler(handlerRef) }
+        hotKeyRef = nil
+        handlerRef = nil
     }
 }

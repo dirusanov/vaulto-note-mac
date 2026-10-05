@@ -100,6 +100,11 @@ enum Settings {
         set { defaults.set(newValue, forKey: "modelID") }
     }
 
+    static var onboardingDone: Bool {
+        get { bool("onboardingDone", default: false) }
+        set { defaults.set(newValue, forKey: "onboardingDone") }
+    }
+
     static var showInDock: Bool {
         get { bool("showInDock", default: true) }
         set { defaults.set(newValue, forKey: "showInDock") }

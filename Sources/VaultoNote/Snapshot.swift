@@ -24,6 +24,13 @@ enum Snapshot {
                                appearance: appearance, to: directory.appendingPathComponent(name))
                     }
                 }
+                let fresh = AppController()
+                fresh.applyPreviewState(setupDone: false)
+                for step in OnboardingStep.allCases {
+                    render(OnboardingView(app: fresh, step: step) {}, size: NSSize(width: 600, height: 560),
+                           appearance: appearance,
+                           to: directory.appendingPathComponent("\(language)-\(appearanceName)-onboarding-\(step.rawValue).png"))
+                }
                 let hud = HUDModel()
                 hud.state = .recording(started: Date().addingTimeInterval(-7))
                 hud.levels = (0..<24).map { i in Float(0.25 + 0.6 * abs(sin(Double(i) / 2.5))) }

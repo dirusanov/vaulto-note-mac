@@ -3,7 +3,7 @@ import AVFoundation
 import ServiceManagement
 
 enum Page: String, CaseIterable, Identifiable {
-    case home, shortcuts, transcription, output, history, general
+    case home, history, shortcuts, transcription, general
     var id: String { rawValue }
 }
 
@@ -105,6 +105,7 @@ final class AppController: ObservableObject {
     }
 
     var onInterfaceLanguageChange: (() -> Void)?
+    var onShowOnboarding: (() -> Void)?
     var onDockVisibilityChange: ((Bool) -> Void)?
     /// Called on every phase change so the status bar icon can follow.
     var onPhaseChange: ((Phase) -> Void)?
@@ -117,6 +118,7 @@ final class AppController: ObservableObject {
     private let hud = HUDController()
     private let historyStore = HistoryStore()
     private let models = ModelManager()
+    private let pasteLastHotKey = CarbonHotKey(id: 2)
     private var permissionTimer: Timer?
 
     var selectedModel: WhisperModel { WhisperModel.find(selectedModelID) }
@@ -151,13 +153,23 @@ final class AppController: ObservableObject {
         hotkey.onCancel = { [weak self] in self?.cancelRecording() }
         hotkey.start()
 
+        pasteLastHotKey.onPress = { [weak self] in self?.pasteLast() }
+        pasteLastHotKey.register(keyCode: 9, modifiers: [.control, .command]) // ⌃⌘V
+
         refreshPermissions()
-        if AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined { requestMicrophone() }
-        if !accessibilityGranted { TextInserter.requestTrust() }
-        // Permissions change in System Settings, outside the app; poll while any is missing.
-        permissionTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+        // Permissions change in System Settings, outside the app; poll to notice.
+        // Prompts are shown only when the user asks (onboarding, Allow buttons).
+        permissionTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             self?.refreshPermissions()
         }
+        // A model already on disk loads right away; a first download waits for onboarding
+        // so 1.6 GB doesn't start before the user knows what the app is.
+        if Settings.onboardingDone || selectedModel.isDownloaded { prepareModel() }
+    }
+
+    /// Loads the selected model, downloading it first if needed.
+    func prepareModel() {
+        guard modelState == .notLoaded, downloadingModelID == nil else { return }
         loadSelectedModel()
     }
 
@@ -329,11 +341,12 @@ final class AppController: ObservableObject {
 
     private func deliver(_ text: String) {
         let output = text + (trailingSpace ? " " : "")
-        if autoPaste && accessibilityGranted {
+        if autoPaste && accessibilityGranted && TextInserter.hasFocusedTextField {
             TextInserter.insert(output, restoreClipboard: restoreClipboard)
         } else {
+            // Nowhere to type into: keep the text on the clipboard rather than lose it.
             TextInserter.copy(output)
-            hud.show(.message(L10n.t("hud.copied")))
+            hud.show(.message(autoPaste ? L10n.t("hud.copied_paste") : L10n.t("hud.copied")))
         }
     }
 
@@ -374,6 +387,17 @@ final class AppController: ObservableObject {
         history = setupDone ? samples.map {
             HistoryEntry(date: now.addingTimeInterval($0.3), text: $0.0, language: $0.1, audioSeconds: $0.2)
         } : []
+    }
+
+    /// Pastes the latest dictation again (⌃⌘V or the menu).
+    func pasteLast() {
+        guard let entry = history.first else { return }
+        if accessibilityGranted {
+            TextInserter.insert(entry.text + (trailingSpace ? " " : ""), restoreClipboard: restoreClipboard)
+        } else {
+            TextInserter.copy(entry.text)
+            hud.show(.message(L10n.t("hud.copied")))
+        }
     }
 
     // MARK: - History

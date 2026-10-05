@@ -42,6 +42,8 @@ struct KeycapRow: View {
 struct ShortcutRecorder: View {
     @Binding var shortcut: Shortcut
     @Binding var isRecording: Bool
+    /// A small "Other…" chip instead of the full keycap field (onboarding).
+    var compact = false
     @State private var monitor: Any?
     @State private var pendingModifier: ModifierKey?
     @State private var hint: String?
@@ -55,12 +57,15 @@ struct ShortcutRecorder: View {
                         Text(L10n.t("shortcut.press_keys"))
                             .font(.system(size: 13, weight: .medium))
                             .foregroundStyle(VaultoColor.primary)
+                    } else if compact {
+                        Text(L10n.t("shortcut.other"))
+                            .font(.system(size: 12, weight: .medium))
                     } else {
                         KeycapRow(shortcut: shortcut)
                     }
                 }
                 .padding(.horizontal, 10)
-                .frame(minWidth: 150, minHeight: 34)
+                .frame(minWidth: compact ? 0 : 150, minHeight: compact ? 26 : 34)
                 .background(
                     RoundedRectangle(cornerRadius: 9)
                         .fill(isRecording ? VaultoColor.primaryLight : VaultoColor.backgroundSecondary)

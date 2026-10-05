@@ -9,7 +9,6 @@ extension Page {
         case .home: return "house.fill"
         case .shortcuts: return "command"
         case .transcription: return "waveform"
-        case .output: return "text.cursor"
         case .history: return "clock.fill"
         case .general: return "gearshape.fill"
         }
@@ -20,7 +19,6 @@ extension Page {
         case .home: return VaultoColor.primary
         case .shortcuts: return Color(red: 0.55, green: 0.36, blue: 0.96)
         case .transcription: return Color(red: 0.93, green: 0.28, blue: 0.6)
-        case .output: return Color(red: 0.06, green: 0.73, blue: 0.51)
         case .history: return Color(red: 0.96, green: 0.62, blue: 0.04)
         case .general: return Color(red: 0.42, green: 0.46, blue: 0.49)
         }
@@ -98,7 +96,6 @@ struct PageView: View {
         case .home: HomePage(app: app)
         case .shortcuts: ShortcutsPage(app: app)
         case .transcription: TranscriptionPage(app: app)
-        case .output: OutputPage(app: app)
         case .history: HistoryPage(app: app)
         case .general: GeneralPage(app: app)
         }
@@ -146,14 +143,12 @@ private struct StatusFooter: View {
 
 struct HomePage: View {
     @ObservedObject var app: AppController
-    @State private var tryText = ""
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 hero
                 if !app.isReady { SetupChecklist(app: app) }
-                tryIt
                 stats
                 recent
             }
@@ -183,30 +178,6 @@ struct HomePage: View {
             KeycapRow(shortcut: app.shortcut, large: true)
                 .padding(20)
                 .background(RoundedRectangle(cornerRadius: 16).fill(VaultoColor.primaryLight))
-        }
-        .vaultoCard()
-    }
-
-    private var tryIt: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(L10n.t("home.try_title")).font(VaultoFont.sectionTitle)
-            ZStack(alignment: .topLeading) {
-                TextEditor(text: $tryText)
-                    .font(.system(size: 14))
-                    .scrollContentBackground(.hidden)
-                    .padding(8)
-                if tryText.isEmpty {
-                    Text(L10n.t("home.try_placeholder", app.shortcut.inlineTitle))
-                        .font(.system(size: 14))
-                        .foregroundStyle(VaultoColor.textTertiary)
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 8)
-                        .allowsHitTesting(false)
-                }
-            }
-            .frame(height: 96)
-            .background(RoundedRectangle(cornerRadius: 10).fill(VaultoColor.background))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(VaultoColor.border, lineWidth: 1))
         }
         .vaultoCard()
     }
@@ -455,6 +426,11 @@ struct ShortcutsPage: View {
                 Toggle(isOn: $app.cancelWithEscape) {
                     RowLabel(title: L10n.t("shortcut.escape"), detail: L10n.t("shortcut.escape_detail"))
                 }
+                LabeledContent {
+                    KeycapRow(shortcut: .combo(keyCode: 9, modifiers: NSEvent.ModifierFlags([.control, .command]).rawValue))
+                } label: {
+                    RowLabel(title: L10n.t("shortcut.paste_last"), detail: L10n.t("shortcut.paste_last_detail"))
+                }
             }
         }
         .formStyle(.grouped)
@@ -660,35 +636,6 @@ private struct ModelCard: View {
     }
 }
 
-// MARK: - Output
-
-struct OutputPage: View {
-    @ObservedObject var app: AppController
-
-    var body: some View {
-        Form {
-            Section {
-                Toggle(isOn: $app.autoPaste) {
-                    RowLabel(title: L10n.t("output.auto_paste"), detail: L10n.t("output.auto_paste_detail"))
-                }
-                Toggle(isOn: $app.restoreClipboard) {
-                    RowLabel(title: L10n.t("output.restore_clipboard"), detail: L10n.t("output.restore_clipboard_detail"))
-                }
-                .disabled(!app.autoPaste)
-                Toggle(isOn: $app.trailingSpace) {
-                    RowLabel(title: L10n.t("settings.trailing_space"), detail: L10n.t("output.trailing_space_detail"))
-                }
-            }
-            Section {
-                Toggle(isOn: $app.playSounds) {
-                    RowLabel(title: L10n.t("output.sounds"), detail: L10n.t("output.sounds_detail"))
-                }
-            }
-        }
-        .formStyle(.grouped)
-    }
-}
-
 // MARK: - History
 
 struct HistoryPage: View {
@@ -865,6 +812,22 @@ struct GeneralPage: View {
                 }
             }
 
+            Section(L10n.t("page.output")) {
+                Toggle(isOn: $app.autoPaste) {
+                    RowLabel(title: L10n.t("output.auto_paste"), detail: L10n.t("output.auto_paste_detail"))
+                }
+                Toggle(isOn: $app.restoreClipboard) {
+                    RowLabel(title: L10n.t("output.restore_clipboard"), detail: L10n.t("output.restore_clipboard_detail"))
+                }
+                .disabled(!app.autoPaste)
+                Toggle(isOn: $app.trailingSpace) {
+                    RowLabel(title: L10n.t("settings.trailing_space"), detail: L10n.t("output.trailing_space_detail"))
+                }
+                Toggle(isOn: $app.playSounds) {
+                    RowLabel(title: L10n.t("output.sounds"), detail: L10n.t("output.sounds_detail"))
+                }
+            }
+
             Section {
                 Toggle(isOn: Binding(get: { app.launchAtLogin }, set: { app.launchAtLogin = $0 })) {
                     RowLabel(title: L10n.t("general.launch_at_login"), detail: L10n.t("general.launch_at_login_detail"))
@@ -883,6 +846,9 @@ struct GeneralPage: View {
             Section {
                 LabeledContent(L10n.t("general.models_folder")) {
                     Button(L10n.t("general.show_in_finder")) { NSWorkspace.shared.open(AppPaths.models) }
+                }
+                LabeledContent(L10n.t("general.welcome_again")) {
+                    Button(L10n.t("general.show")) { app.onShowOnboarding?() }
                 }
                 LabeledContent(L10n.t("general.version")) {
                     Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")

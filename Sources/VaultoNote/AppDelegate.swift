@@ -3,6 +3,9 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let app = AppController()
     private lazy var mainWindow = MainWindowController(app: app)
+    private lazy var onboarding = OnboardingWindowController(app: app) { [weak self] in
+        self?.mainWindow.show(page: .home)
+    }
     private var statusItem: NSStatusItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -21,13 +24,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             // Switching to .accessory hides the window along with the app; keep it on screen.
             DispatchQueue.main.async { self?.mainWindow.show() }
         }
+        app.onShowOnboarding = { [weak self] in self?.onboarding.show() }
         app.start()
-        mainWindow.show()
+
+        if !Settings.onboardingDone {
+            onboarding.show()
+        } else if !Self.launchedAsLoginItem {
+            mainWindow.show()
+        }
+    }
+
+    /// Started by "Open at login": stay quietly in the menu bar.
+    private static var launchedAsLoginItem: Bool {
+        guard let event = NSAppleEventManager.shared().currentAppleEvent else { return false }
+        return event.eventID == kAEOpenApplication
+            && event.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem
     }
 
     /// Clicking the app in Finder, Spotlight or the Dock while it runs brings the window back.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        mainWindow.show()
+        if Settings.onboardingDone { mainWindow.show() } else { onboarding.show() }
         return true
     }
 
@@ -62,6 +78,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         let recordTitle = app.phase == .idle ? L10n.t("menu.start_recording") : L10n.t("menu.stop_insert")
         menu.addItem(item(recordTitle, #selector(toggleRecording)))
+        if !app.history.isEmpty {
+            let pasteItem = item(L10n.t("shortcut.paste_last"), #selector(pasteLast))
+            pasteItem.keyEquivalent = "v"
+            pasteItem.keyEquivalentModifierMask = [.control, .command]
+            menu.addItem(pasteItem)
+        }
 
         if !app.history.isEmpty {
             menu.addItem(.separator())
@@ -108,6 +130,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func toggleRecording() {
         // Give the menu time to close so the paste lands in the previous app.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { self.app.toggleRecording() }
+    }
+
+    @objc private func pasteLast() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { self.app.pasteLast() }
     }
 
     @objc private func copyHistoryEntry(_ sender: NSMenuItem) {

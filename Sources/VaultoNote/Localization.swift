@@ -558,5 +558,103 @@ enum L10n {
         "mainmenu.cut": row([
             "Cut", "Вырезать", "Ausschneiden", "Cortar", "Couper", "Recortar", "剪切", "カット",
         ]),
+
+        // Onboarding, paste last
+        "onboarding.welcome_text": row([
+            "Voice typing in any app. Hold a key, speak, release — the text appears where your cursor is.", "Голосовой ввод в любом приложении. Удерживайте клавишу, говорите, отпустите — текст появится там, где курсор.", "Spracheingabe in jeder App. Taste halten, sprechen, loslassen – der Text erscheint am Cursor.", "Escritura por voz en cualquier app. Mantén una tecla, habla y suelta: el texto aparece donde está el cursor.", "La saisie vocale dans toutes les apps. Maintenez une touche, parlez, relâchez : le texte apparaît au curseur.", "Digitação por voz em qualquer app. Segure uma tecla, fale e solte: o texto aparece onde está o cursor.", "在任何应用中用语音输入。按住按键说话，松开后文字就出现在光标处。", "どのアプリでも音声で入力。キーを押しながら話して離すと、カーソル位置に文字が入ります。",
+        ]),
+        "onboarding.feature_private": row([
+            "Works offline, audio never leaves your Mac", "Работает без интернета, звук не покидает ваш Mac", "Funktioniert offline, Audio bleibt auf Ihrem Mac", "Funciona sin conexión, el audio no sale de tu Mac", "Fonctionne hors ligne, l'audio reste sur votre Mac", "Funciona offline, o áudio não sai do seu Mac", "离线运行，音频不会离开你的 Mac", "オフラインで動作し、音声は Mac の外に出ません",
+        ]),
+        "onboarding.feature_any_app": row([
+            "Mail, chats, notes, code — anywhere you type", "Почта, чаты, заметки, код — везде, где можно печатать", "Mail, Chats, Notizen, Code – überall, wo Sie tippen", "Correo, chats, notas, código: donde escribas", "Mail, messageries, notes, code : partout où vous tapez", "E-mail, chats, notas, código: onde você digitar", "邮件、聊天、笔记、代码——凡是能打字的地方", "メール、チャット、メモ、コード――入力できる場所ならどこでも",
+        ]),
+        "onboarding.feature_languages": row([
+            "About 100 languages, even mixed in one phrase", "Около 100 языков, даже вперемешку в одной фразе", "Rund 100 Sprachen, sogar gemischt in einem Satz", "Unos 100 idiomas, incluso mezclados en una frase", "Environ 100 langues, même mélangées dans une phrase", "Cerca de 100 idiomas, mesmo misturados numa frase", "约 100 种语言，同一句话中混用也可以", "約100言語。1つの文に混ざっていても大丈夫",
+        ]),
+        "onboarding.start": row([
+            "Get started", "Начать", "Los geht's", "Empezar", "Commencer", "Começar", "开始", "はじめる",
+        ]),
+        "onboarding.continue": row([
+            "Continue", "Продолжить", "Weiter", "Continuar", "Continuer", "Continuar", "继续", "続ける",
+        ]),
+        "onboarding.mic_title": row([
+            "Let Vaulto hear you", "Разрешите Vaulto слышать вас", "Lassen Sie Vaulto zuhören", "Deja que Vaulto te escuche", "Laissez Vaulto vous entendre", "Deixe o Vaulto ouvir você", "让 Vaulto 听到你的声音", "Vaulto に声を聞かせてください",
+        ]),
+        "onboarding.mic_text": row([
+            "The microphone turns on only while you hold the key. macOS shows an orange dot whenever it's on.", "Микрофон включается только пока вы держите клавишу. macOS показывает оранжевую точку, когда он включён.", "Das Mikrofon ist nur an, solange Sie die Taste halten. macOS zeigt dann einen orangefarbenen Punkt.", "El micrófono solo se activa mientras mantienes la tecla. macOS muestra un punto naranja cuando está encendido.", "Le micro ne s'active que pendant que vous maintenez la touche. macOS affiche alors un point orange.", "O microfone só liga enquanto você segura a tecla. O macOS mostra um ponto laranja quando ele está ligado.", "只有按住按键时麦克风才会开启，开启时 macOS 会显示橙色圆点。", "マイクはキーを押している間だけオンになります。オンのときは macOS がオレンジの点を表示します。",
+        ]),
+        "onboarding.mic_button": row([
+            "Allow microphone", "Разрешить микрофон", "Mikrofon erlauben", "Permitir micrófono", "Autoriser le micro", "Permitir microfone", "允许使用麦克风", "マイクを許可",
+        ]),
+        "onboarding.ax_title": row([
+            "Let Vaulto type for you", "Разрешите Vaulto печатать за вас", "Lassen Sie Vaulto für Sie tippen", "Deja que Vaulto escriba por ti", "Laissez Vaulto écrire pour vous", "Deixe o Vaulto digitar por você", "让 Vaulto 替你打字", "Vaulto に入力を任せましょう",
+        ]),
+        "onboarding.ax_text": row([
+            "Accessibility lets Vaulto notice the shortcut in other apps and paste the text where your cursor is. Nothing else is read or sent.", "Универсальный доступ нужен, чтобы замечать клавишу в других приложениях и вставлять текст туда, где курсор. Больше ничего не читается и не отправляется.", "Die Bedienungshilfen erlauben Vaulto, den Kurzbefehl in anderen Apps zu erkennen und Text am Cursor einzufügen. Sonst wird nichts gelesen oder gesendet.", "Accesibilidad permite a Vaulto detectar el atajo en otras apps y pegar el texto donde está el cursor. No se lee ni se envía nada más.", "L'Accessibilité permet à Vaulto de repérer le raccourci dans les autres apps et de coller le texte au curseur. Rien d'autre n'est lu ni envoyé.", "A Acessibilidade permite ao Vaulto detectar o atalho em outros apps e colar o texto onde está o cursor. Nada mais é lido ou enviado.", "辅助功能让 Vaulto 能在其他应用中识别快捷键，并把文字粘贴到光标处。不会读取或发送其他任何内容。", "アクセシビリティを許可すると、他のアプリでもショートカットを検出し、カーソル位置にテキストを貼り付けられます。それ以外は読み取りも送信もしません。",
+        ]),
+        "onboarding.ax_step1": row([
+            "Click “Open System Settings” below", "Нажмите «Открыть Системные настройки» ниже", "Klicken Sie unten auf „Systemeinstellungen öffnen“", "Haz clic en «Abrir Ajustes del Sistema»", "Cliquez sur « Ouvrir Réglages Système » ci-dessous", "Clique em “Abrir Ajustes do Sistema” abaixo", "点击下方的“打开系统设置”", "下の「システム設定を開く」をクリック",
+        ]),
+        "onboarding.ax_step2": row([
+            "Turn on Vaulto Note in the list — this window continues by itself", "Включите Vaulto Note в списке — это окно продолжит само", "Aktivieren Sie Vaulto Note in der Liste – dieses Fenster macht dann von selbst weiter", "Activa Vaulto Note en la lista: esta ventana continuará sola", "Activez Vaulto Note dans la liste : cette fenêtre continuera toute seule", "Ative o Vaulto Note na lista: esta janela continua sozinha", "在列表中打开 Vaulto Note，此窗口会自动继续", "リストで Vaulto Note をオンにすると、このウインドウは自動で次に進みます",
+        ]),
+        "onboarding.ax_button": row([
+            "Open System Settings", "Открыть Системные настройки", "Systemeinstellungen öffnen", "Abrir Ajustes del Sistema", "Ouvrir Réglages Système", "Abrir Ajustes do Sistema", "打开系统设置", "システム設定を開く",
+        ]),
+        "onboarding.ax_skip": row([
+            "Later — copy text to the clipboard instead", "Позже — пока просто копировать текст в буфер", "Später – Text vorerst nur kopieren", "Más tarde: por ahora solo copiar el texto", "Plus tard : copier le texte pour l'instant", "Mais tarde: por enquanto só copiar o texto", "稍后再说——先把文字复制到剪贴板", "あとで（当面はクリップボードにコピー）",
+        ]),
+        "onboarding.shortcut_title": row([
+            "Your dictation key", "Ваша клавиша диктовки", "Ihre Diktiertaste", "Tu tecla de dictado", "Votre touche de dictée", "Sua tecla de ditado", "你的听写按键", "音声入力のキー",
+        ]),
+        "onboarding.shortcut_text": row([
+            "Hold it to talk, release to insert. Tap once for hands-free. You can change it any time in Settings.", "Удерживайте, чтобы говорить, отпустите — текст вставится. Короткое нажатие — запись без рук. Поменять можно в любой момент в настройках.", "Halten zum Sprechen, loslassen zum Einfügen. Einmal tippen für freihändig. Jederzeit in den Einstellungen änderbar.", "Mantenla para hablar y suelta para insertar. Una pulsación corta graba sin manos. Puedes cambiarla en Ajustes.", "Maintenez pour parler, relâchez pour insérer. Un appui bref : mains libres. Modifiable à tout moment dans les réglages.", "Segure para falar e solte para inserir. Um toque grava sem as mãos. Dá para mudar a qualquer momento nos ajustes.", "按住说话，松开插入；轻点一次可免按住录音。随时可在设置中更改。", "押しながら話し、離すと入力。1回タップでハンズフリー。設定でいつでも変更できます。",
+        ]),
+        "shortcut.other": row([
+            "Other…", "Другая…", "Andere…", "Otra…", "Autre…", "Outra…", "其他…", "その他…",
+        ]),
+        "onboarding.practice_title": row([
+            "Try it now", "Попробуйте", "Jetzt ausprobieren", "Pruébalo ahora", "Essayez maintenant", "Experimente agora", "现在试试", "試してみましょう",
+        ]),
+        "onboarding.practice_text": row([
+            "Hold %@ and say: “Hello, this is my first dictation”. Release the key.", "Удерживайте %@ и скажите: «Привет, это моя первая диктовка». Отпустите клавишу.", "Halten Sie %@ und sagen Sie: „Hallo, das ist mein erstes Diktat“. Dann loslassen.", "Mantén %@ y di: «Hola, este es mi primer dictado». Suelta la tecla.", "Maintenez %@ et dites : « Bonjour, c'est ma première dictée ». Relâchez la touche.", "Segure %@ e diga: “Olá, este é o meu primeiro ditado”. Solte a tecla.", "按住 %@ 说：“你好，这是我的第一次听写。”然后松开。", "%@ を押しながら「こんにちは、初めての音声入力です」と言って、キーを離します。",
+        ]),
+        "onboarding.practice_placeholder": row([
+            "Your words will appear here", "Здесь появятся ваши слова", "Hier erscheinen Ihre Worte", "Aquí aparecerán tus palabras", "Vos mots apparaîtront ici", "Suas palavras aparecerão aqui", "你的话会出现在这里", "ここに言葉が表示されます",
+        ]),
+        "onboarding.practice_done": row([
+            "It works!", "Работает!", "Es funktioniert!", "¡Funciona!", "Ça marche !", "Funcionou!", "成功了！", "できました！",
+        ]),
+        "onboarding.practice_done_text": row([
+            "Now do the same in any app. Vaulto Note waits in the menu bar.", "Теперь так же — в любом приложении. Vaulto Note ждёт в строке меню.", "Jetzt genauso in jeder App. Vaulto Note wartet in der Menüleiste.", "Ahora haz lo mismo en cualquier app. Vaulto Note te espera en la barra de menús.", "Faites pareil dans n'importe quelle app. Vaulto Note vous attend dans la barre des menus.", "Agora faça o mesmo em qualquer app. O Vaulto Note fica na barra de menus.", "现在在任何应用中都能这样用。Vaulto Note 就在菜单栏里。", "どのアプリでも同じように使えます。Vaulto Note はメニューバーで待機しています。",
+        ]),
+        "onboarding.finish": row([
+            "Start using Vaulto", "Начать пользоваться", "Vaulto verwenden", "Empezar a usar Vaulto", "Utiliser Vaulto", "Começar a usar o Vaulto", "开始使用 Vaulto", "Vaulto を使いはじめる",
+        ]),
+        "onboarding.skip_practice": row([
+            "Skip for now", "Пропустить", "Vorerst überspringen", "Omitir por ahora", "Passer pour l'instant", "Pular por enquanto", "暂时跳过", "今はスキップ",
+        ]),
+        "onboarding.model_downloading": row([
+            "Downloading the speech model… %d%%", "Скачиваю модель распознавания… %d%%", "Sprachmodell wird geladen… %d%%", "Descargando el modelo de voz… %d%%", "Téléchargement du modèle vocal… %d%%", "Baixando o modelo de voz… %d%%", "正在下载语音模型… %d%%", "音声モデルをダウンロード中… %d%%",
+        ]),
+        "onboarding.model_preparing": row([
+            "Preparing the model — the first time takes up to 20 seconds", "Готовлю модель — в первый раз это до 20 секунд", "Modell wird vorbereitet – beim ersten Mal bis zu 20 Sekunden", "Preparando el modelo: la primera vez tarda hasta 20 segundos", "Préparation du modèle : jusqu'à 20 secondes la première fois", "Preparando o modelo: na primeira vez leva até 20 segundos", "正在准备模型——首次最多需要 20 秒", "モデルを準備中（初回は最大20秒）",
+        ]),
+        "hud.copied_paste": row([
+            "Copied — paste with ⌘V", "Скопировано — вставьте через ⌘V", "Kopiert – mit ⌘V einfügen", "Copiado: pega con ⌘V", "Copié : collez avec ⌘V", "Copiado: cole com ⌘V", "已复制——按 ⌘V 粘贴", "コピーしました（⌘V で貼り付け）",
+        ]),
+        "shortcut.paste_last": row([
+            "Paste last dictation", "Вставить последнюю диктовку", "Letztes Diktat einfügen", "Pegar el último dictado", "Coller la dernière dictée", "Colar o último ditado", "粘贴上一次听写", "最後の音声入力を貼り付け",
+        ]),
+        "shortcut.paste_last_detail": row([
+            "If the text went to the wrong place, put the cursor where it belongs and press this", "Если текст ушёл не туда, поставьте курсор куда нужно и нажмите это сочетание", "Falls der Text am falschen Ort gelandet ist: Cursor setzen und diese Tasten drücken", "Si el texto fue a otro sitio, coloca el cursor donde debe ir y pulsa este atajo", "Si le texte est parti ailleurs, placez le curseur au bon endroit et appuyez sur ce raccourci", "Se o texto foi para o lugar errado, coloque o cursor no lugar certo e pressione este atalho", "如果文字插错了位置，把光标放到正确位置后按此快捷键", "別の場所に入力された場合は、カーソルを正しい位置に置いてこのキーを押します",
+        ]),
+        "general.welcome_again": row([
+            "Welcome guide", "Приветствие и настройка", "Einführung", "Guía de bienvenida", "Guide de bienvenue", "Guia de boas-vindas", "欢迎向导", "ようこそガイド",
+        ]),
+        "general.show": row([
+            "Show again", "Показать снова", "Erneut zeigen", "Ver de nuevo", "Revoir", "Mostrar de novo", "再次显示", "もう一度表示",
+        ]),
     ]
 }

@@ -29,13 +29,13 @@ cp "$BIN/VaultoNote" "$APP/Contents/MacOS/VaultoNote"
 cp -R "$BIN/whisper.framework" "$APP/Contents/Frameworks/"
 sed "s/__VERSION__/$VERSION/g" Resources/Info.plist > "$APP/Contents/Info.plist"
 
-# App icon from the mobile app's artwork.
-if [ ! -f build/AppIcon.icns ]; then
+# App icon: the mobile app's glyph on Apple's icon grid (scripts/make-icon.swift).
+if [ ! -f build/AppIcon.icns ] || [ Resources/AppIcon-1024.png -nt build/AppIcon.icns ]; then
   ICONSET=build/AppIcon.iconset
   mkdir -p "$ICONSET"
   for size in 16 32 128 256 512; do
-    sips -z $size $size Resources/icon-source.png --out "$ICONSET/icon_${size}x${size}.png" >/dev/null
-    sips -z $((size * 2)) $((size * 2)) Resources/icon-source.png --out "$ICONSET/icon_${size}x${size}@2x.png" >/dev/null
+    sips -z $size $size Resources/AppIcon-1024.png --out "$ICONSET/icon_${size}x${size}.png" >/dev/null
+    sips -z $((size * 2)) $((size * 2)) Resources/AppIcon-1024.png --out "$ICONSET/icon_${size}x${size}@2x.png" >/dev/null
   done
   iconutil -c icns "$ICONSET" -o build/AppIcon.icns
   rm -rf "$ICONSET"
