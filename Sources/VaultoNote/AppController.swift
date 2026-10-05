@@ -34,6 +34,12 @@ final class AppController: ObservableObject {
     @Published private(set) var micGranted = false
     @Published private(set) var accessibilityGranted = false
     @Published private(set) var history: [HistoryEntry] = []
+    /// Microphone level 0…1 while recording, for the in-window record button.
+    @Published private(set) var level: Float = 0
+    /// Text of a dictation started from the window's record button. There is no text
+    /// field to paste into then, so it's shown under the button and copied instead.
+    @Published private(set) var inAppResult: String?
+    private var recordingFromWindow = false
     @Published var page: Page = .home
     /// True while the shortcut recorder listens, so the trigger doesn't fire.
     @Published var isRecordingShortcut = false {
@@ -143,7 +149,10 @@ final class AppController: ObservableObject {
 
     func start() {
         history = historyStore.entries
-        recorder.onLevel = { [weak self] level in self?.hud.setLevel(level) }
+        recorder.onLevel = { [weak self] level in
+            self?.hud.setLevel(level)
+            self?.level = level
+        }
 
         hotkey.shortcut = shortcut
         hotkey.mode = triggerMode
@@ -271,6 +280,17 @@ final class AppController: ObservableObject {
 
     // MARK: - Dictation
 
+    /// The record button in the main window.
+    func toggleRecordingFromWindow() {
+        if phase == .idle {
+            recordingFromWindow = true
+            inAppResult = nil
+        }
+        toggleRecording()
+        if phase == .idle { recordingFromWindow = false }
+    }
+
+
     func toggleRecording() {
         switch phase {
         case .idle:
@@ -300,7 +320,8 @@ final class AppController: ObservableObject {
         do {
             try recorder.start()
             setPhase(.recording(started: Date()))
-            hud.show(.recording(started: Date()))
+            // The window's record button shows its own state; the HUD is for other apps.
+            if !recordingFromWindow { hud.show(.recording(started: Date())) }
             playSound("Tink")
         } catch {
             hotkey.reset()
@@ -311,9 +332,11 @@ final class AppController: ObservableObject {
     private func finishRecording() {
         guard case .recording = phase else { return }
         let samples = recorder.stop()
+        let fromWindow = recordingFromWindow
+        recordingFromWindow = false
         playSound("Pop")
         setPhase(.transcribing)
-        hud.show(.transcribing)
+        if !fromWindow { hud.show(.transcribing) }
 
         engine.transcribe(samples: samples, language: speechLanguage, prompt: vocabulary) { [weak self] result in
             guard let self else { return }
@@ -332,14 +355,19 @@ final class AppController: ObservableObject {
                     audioSeconds: transcript.audioSeconds
                 ))
                 self.history = self.historyStore.entries
-                self.deliver(transcript.text)
+                self.deliver(transcript.text, fromWindow: fromWindow)
             case .failure(let error):
                 self.hud.show(.message(error.localizedDescription))
             }
         }
     }
 
-    private func deliver(_ text: String) {
+    private func deliver(_ text: String, fromWindow: Bool) {
+        if fromWindow {
+            TextInserter.copy(text)
+            inAppResult = text
+            return
+        }
         let output = text + (trailingSpace ? " " : "")
         if autoPaste && accessibilityGranted && TextInserter.hasFocusedTextField {
             TextInserter.insert(output, restoreClipboard: restoreClipboard)
@@ -352,6 +380,7 @@ final class AppController: ObservableObject {
 
     private func cancelRecording() {
         guard case .recording = phase else { return }
+        recordingFromWindow = false
         _ = recorder.stop()
         setPhase(.idle)
         hud.show(.hidden)
@@ -359,6 +388,7 @@ final class AppController: ObservableObject {
 
     private func setPhase(_ phase: Phase) {
         self.phase = phase
+        if phase == .idle { level = 0 }
         onPhaseChange?(phase)
     }
 
@@ -398,6 +428,13 @@ final class AppController: ObservableObject {
             TextInserter.copy(entry.text)
             hud.show(.message(L10n.t("hud.copied")))
         }
+    }
+
+    /// Snapshot-only: shows the record button mid-recording or with a result.
+    func applyPreviewDictation(recording: Bool, result: String?) {
+        phase = recording ? .recording(started: Date().addingTimeInterval(-12)) : .idle
+        level = recording ? 0.5 : 0
+        inAppResult = result
     }
 
     // MARK: - History

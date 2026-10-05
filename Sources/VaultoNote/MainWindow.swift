@@ -160,26 +160,43 @@ struct HomePage: View {
     }
 
     private var hero: some View {
-        HStack(alignment: .center, spacing: 24) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(L10n.t("home.hero_title"))
-                    .font(.system(size: 26, weight: .bold))
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(L10n.t("mode.\(app.triggerMode.rawValue).summary", app.shortcut.inlineTitle))
-                    .font(.system(size: 14))
-                    .foregroundStyle(VaultoColor.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                Button(L10n.t("home.change_shortcut")) { app.page = .shortcuts }
-                    .buttonStyle(.link)
-                    .font(.system(size: 13, weight: .medium))
-                    .padding(.top, 2)
+        VStack(spacing: 14) {
+            RecordButton(app: app)
+            VStack(spacing: 6) {
+                Text(heroTitle)
+                    .font(.system(size: 17, weight: .semibold))
+                    .multilineTextAlignment(.center)
+                if app.phase == .idle {
+                    HStack(spacing: 6) {
+                        Text(L10n.t("home.or_hold"))
+                            .foregroundStyle(VaultoColor.textSecondary)
+                        KeycapRow(shortcut: app.shortcut)
+                        Text(L10n.t("home.in_any_app"))
+                            .foregroundStyle(VaultoColor.textSecondary)
+                    }
+                    .font(.system(size: 13))
+                    Button(L10n.t("home.change_shortcut")) { app.page = .shortcuts }
+                        .buttonStyle(.link)
+                        .font(.system(size: 12))
+                }
             }
-            Spacer(minLength: 12)
-            KeycapRow(shortcut: app.shortcut, large: true)
-                .padding(20)
-                .background(RoundedRectangle(cornerRadius: 16).fill(VaultoColor.primaryLight))
+            if let result = app.inAppResult, app.phase == .idle {
+                InAppResult(text: result)
+            }
         }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
         .vaultoCard()
+        .animation(.spring(duration: 0.3), value: app.phase)
+        .animation(.spring(duration: 0.3), value: app.inAppResult)
+    }
+
+    private var heroTitle: String {
+        switch app.phase {
+        case .idle: return L10n.t("home.click_to_record")
+        case .recording: return L10n.t("home.click_to_stop")
+        case .transcribing: return L10n.t("hud.transcribing")
+        }
     }
 
     private var stats: some View {
@@ -221,26 +238,113 @@ struct HomePage: View {
     }
 }
 
+/// Big round microphone button: click to record, click again to transcribe.
+private struct RecordButton: View {
+    @ObservedObject var app: AppController
+
+    private var isRecording: Bool {
+        if case .recording = app.phase { return true }
+        return false
+    }
+
+    var body: some View {
+        Button(action: app.toggleRecordingFromWindow) {
+            ZStack {
+                // Halo that breathes with the voice level while recording.
+                Circle()
+                    .fill((isRecording ? VaultoColor.error : VaultoColor.primary).opacity(0.15))
+                    .frame(width: 112, height: 112)
+                    .scaleEffect(isRecording ? 1 + CGFloat(app.level) * 0.35 : 1)
+                    .animation(.easeOut(duration: 0.1), value: app.level)
+                Circle()
+                    .fill(isRecording ? VaultoColor.error : VaultoColor.primary)
+                    .frame(width: 84, height: 84)
+                    .shadow(color: (isRecording ? VaultoColor.error : VaultoColor.primary).opacity(0.35), radius: 12, y: 4)
+                switch app.phase {
+                case .idle:
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 32, weight: .semibold))
+                        .foregroundStyle(.white)
+                case .recording(let started):
+                    VStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 4).fill(.white).frame(width: 22, height: 22)
+                        TimelineView(.periodic(from: started, by: 1)) { context in
+                            let seconds = max(0, Int(context.date.timeIntervalSince(started)))
+                            Text(String(format: "%d:%02d", seconds / 60, seconds % 60))
+                                .font(.system(size: 11, weight: .semibold))
+                                .monospacedDigit()
+                                .foregroundStyle(.white.opacity(0.9))
+                        }
+                    }
+                case .transcribing:
+                    ProgressView().controlSize(.regular).tint(.white)
+                }
+            }
+            .frame(width: 124, height: 124)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(app.phase == .transcribing)
+        .help(L10n.t("home.click_to_record"))
+    }
+}
+
+/// Result of a dictation recorded with the window's button (already on the clipboard).
+private struct InAppResult: View {
+    let text: String
+    @State private var copied = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(text)
+                .font(.system(size: 15))
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Label(L10n.t("home.result_copied"), systemImage: "checkmark.circle.fill")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(VaultoColor.success)
+                Spacer()
+                CopyButton(copied: $copied) { TextInserter.copy(text) }
+            }
+        }
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 12).fill(VaultoColor.background))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(VaultoColor.border, lineWidth: 1))
+        .transition(.opacity.combined(with: .move(edge: .top)))
+    }
+}
+
 private struct StatTile: View {
     let value: String
     let label: String
     let icon: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(VaultoColor.primary)
-            Text(value)
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .monospacedDigit()
-            Text(label)
-                .font(.system(size: 12))
-                .foregroundStyle(VaultoColor.textSecondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .frame(width: 34, height: 34)
+                .background(RoundedRectangle(cornerRadius: 10).fill(VaultoColor.primaryLight))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(value)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                Text(label)
+                    .font(.system(size: 12))
+                    .foregroundStyle(VaultoColor.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            Spacer(minLength: 0)
         }
-        .vaultoCard()
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 16).fill(VaultoColor.surface))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(VaultoColor.border, lineWidth: 1))
     }
 }
 

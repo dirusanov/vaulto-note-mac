@@ -24,6 +24,14 @@ enum Snapshot {
                                appearance: appearance, to: directory.appendingPathComponent(name))
                     }
                 }
+                for (suffix, recording, result) in [("recording", true, nil as String?),
+                                                     ("result", false, "Купить молоко, хлеб и кофе. Позвонить маме вечером.")] {
+                    let app = AppController()
+                    app.applyPreviewState(setupDone: true)
+                    app.applyPreviewDictation(recording: recording, result: result)
+                    render(RootView(app: app), size: NSSize(width: 920, height: 640), appearance: appearance,
+                           to: directory.appendingPathComponent("\(language)-\(appearanceName)-home-\(suffix).png"))
+                }
                 let fresh = AppController()
                 fresh.applyPreviewState(setupDone: false)
                 for step in OnboardingStep.allCases {

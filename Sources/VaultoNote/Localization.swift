@@ -327,9 +327,6 @@ enum L10n {
         "page.general": row([
             "General", "Основные", "Allgemein", "General", "Général", "Geral", "通用", "一般",
         ]),
-        "home.hero_title": row([
-            "Speak — Vaulto types", "Говорите — Vaulto напечатает", "Sprechen Sie — Vaulto tippt", "Habla y Vaulto escribe", "Parlez, Vaulto écrit", "Fale e o Vaulto digita", "说话，Vaulto 帮你打字", "話すだけで Vaulto が入力",
-        ]),
         "home.change_shortcut": row([
             "Change shortcut", "Изменить клавишу", "Kurzbefehl ändern", "Cambiar atajo", "Modifier le raccourci", "Alterar atalho", "更改快捷键", "ショートカットを変更",
         ]),
@@ -655,6 +652,23 @@ enum L10n {
         ]),
         "general.show": row([
             "Show again", "Показать снова", "Erneut zeigen", "Ver de nuevo", "Revoir", "Mostrar de novo", "再次显示", "もう一度表示",
+        ]),
+
+        // Record button
+        "home.click_to_record": row([
+            "Click to dictate", "Нажмите, чтобы надиктовать", "Zum Diktieren klicken", "Haz clic para dictar", "Cliquez pour dicter", "Clique para ditar", "点击开始听写", "クリックして音声入力",
+        ]),
+        "home.click_to_stop": row([
+            "Click to finish", "Нажмите, чтобы закончить", "Zum Beenden klicken", "Haz clic para terminar", "Cliquez pour terminer", "Clique para terminar", "点击结束", "クリックして終了",
+        ]),
+        "home.or_hold": row([
+            "or hold", "или удерживайте", "oder halten Sie", "o mantén", "ou maintenez", "ou segure", "或在任意应用中按住", "または",
+        ]),
+        "home.in_any_app": row([
+            "in any app", "в любом приложении", "in jeder App", "en cualquier app", "dans n'importe quelle app", "em qualquer app", "", "をどのアプリでも長押し",
+        ]),
+        "home.result_copied": row([
+            "Copied to the clipboard", "Скопировано в буфер обмена", "In die Zwischenablage kopiert", "Copiado al portapapeles", "Copié dans le presse-papiers", "Copiado para a área de transferência", "已复制到剪贴板", "クリップボードにコピーしました",
         ]),
     ]
 }
