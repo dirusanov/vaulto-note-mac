@@ -64,6 +64,30 @@ enum L10n {
         return t("unit.gb", formatter.string(from: NSNumber(value: gigabytes)) ?? "")
     }
 
+    /// Problems in the table: missing languages or format specifiers that differ
+    /// from English. Empty when every string is complete.
+    static func audit() -> [String] {
+        var problems: [String] = []
+        let specifier = try! NSRegularExpression(pattern: "%(?:@|d|%)")
+        func specifiers(_ text: String) -> [String] {
+            specifier.matches(in: text, range: NSRange(text.startIndex..., in: text))
+                .map { String(text[Range($0.range, in: text)!]) }
+                .sorted()
+        }
+        for (key, entry) in table {
+            for language in languages where entry[language.code] == nil {
+                problems.append("\(key): no \(language.code)")
+            }
+            let english = specifiers(entry["en"] ?? "")
+            for (code, text) in entry where specifiers(text) != english {
+                problems.append("\(key): \(code) placeholders differ")
+            }
+        }
+        return problems
+    }
+
+    static func has(_ key: String) -> Bool { table[key] != nil }
+
     // Columns: en, ru, de, es, fr, pt, zh, ja.
     private static func row(_ values: [String]) -> [String: String] {
         Dictionary(uniqueKeysWithValues: zip(languages.map(\.code), values))

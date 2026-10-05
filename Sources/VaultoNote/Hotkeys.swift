@@ -173,6 +173,8 @@ final class HotkeyMonitor {
     private var isRunning = false
     /// Set while the shortcut recorder is open so presses don't start dictation.
     var isSuspended = false
+    /// Clock for tap detection; replaced in tests.
+    var now: () -> Date = Date.init
 
     func start() {
         stop()
@@ -225,7 +227,7 @@ final class HotkeyMonitor {
         if event.modifierFlags.contains(key.flag) { triggerDown() } else { triggerUp() }
     }
 
-    private func otherKeyDown(_ keyCode: UInt16) {
+    func otherKeyDown(_ keyCode: UInt16) {
         if keyCode == UInt16(kVK_Escape), cancelWithEscape, !isIdle {
             state = .idle
             onCancel?()
@@ -243,10 +245,10 @@ final class HotkeyMonitor {
         return false
     }
 
-    private func triggerDown() {
+    func triggerDown() {
         switch state {
         case .idle:
-            state = mode == .toggle ? .locked : .held(since: Date())
+            state = mode == .toggle ? .locked : .held(since: now())
             onStart?()
         case .locked:
             state = .idle
@@ -256,9 +258,9 @@ final class HotkeyMonitor {
         }
     }
 
-    private func triggerUp() {
+    func triggerUp() {
         guard case .held(let since) = state else { return }
-        let isTap = Date().timeIntervalSince(since) < Self.tapThreshold
+        let isTap = now().timeIntervalSince(since) < Self.tapThreshold
         switch mode {
         case .hybrid where isTap:
             state = .locked

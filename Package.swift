@@ -16,5 +16,11 @@ let package = Package(
                 .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"]),
             ]
         ),
+        .testTarget(
+            name: "VaultoNoteTests",
+            dependencies: ["VaultoNote"],
+            path: "Tests/VaultoNoteTests",
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
     ]
 )
