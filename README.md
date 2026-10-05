@@ -88,10 +88,11 @@
 
 ## Install
 
-1. Download **Vaulto-Note-x.y.z.zip** from the [latest release](https://github.com/dirusanov/vaulto-note-mac/releases/latest) and unzip it.
-2. Drag **Vaulto Note.app** to your Applications folder.
-3. **First launch:** the app isn't notarized by Apple yet, so macOS will warn you. Right-click the app → **Open** → **Open**.
-   On macOS 15+ you may need **System Settings → Privacy & Security → Open Anyway**.
+1. Download **Vaulto-Note-x.y.z.dmg** from the [latest release](https://github.com/dirusanov/vaulto-note-mac/releases/latest).
+2. Open it and drag **Vaulto Note** onto **Applications**.
+3. **First launch:** the app isn't notarized by Apple yet, so macOS will warn you once.
+   macOS 14: right-click the app → **Open** → **Open**.
+   macOS 15+: try to open it, then **System Settings → Privacy & Security → Open Anyway**.
    Or in Terminal: `xattr -dr com.apple.quarantine "/Applications/Vaulto Note.app"`
 4. Follow the welcome screens: allow the microphone and Accessibility, pick your key, try your first dictation.
 
@@ -163,6 +164,7 @@ git clone https://github.com/dirusanov/vaulto-note-mac.git
 cd vaulto-note-mac
 scripts/create-dev-cert.sh        # once: stable signing identity, keeps permissions across rebuilds
 scripts/build-app.sh --install    # builds and copies to ~/Applications
+scripts/package-release.sh        # release .dmg (drag-to-Applications window) and .zip
 ```
 
 Needs Xcode (used via `DEVELOPER_DIR`). The prebuilt whisper.cpp XCFramework is downloaded on first build.
@@ -197,7 +199,7 @@ Ideas and bug reports are welcome in [Issues](https://github.com/dirusanov/vault
 
 ## Русский
 
-**Vaulto Note для Mac** — бесплатный голосовой ввод на базе Whisper, который работает полностью на вашем Mac. Удерживайте правый ⌥, говорите, отпустите — текст появится там, где стоит курсор, в любом приложении. Около 100 языков с автоопределением (можно смешивать русский и английский в одной фразе), без интернета, без аккаунта и подписки. Скачать — в [релизах](https://github.com/dirusanov/vaulto-note-mac/releases/latest); при первом запуске нажмите на приложении правой кнопкой → «Открыть».
+**Vaulto Note для Mac** — бесплатный голосовой ввод на базе Whisper, который работает полностью на вашем Mac. Удерживайте правый ⌥, говорите, отпустите — текст появится там, где стоит курсор, в любом приложении. Около 100 языков с автоопределением (можно смешивать русский и английский в одной фразе), без интернета, без аккаунта и подписки. Скачайте `.dmg` в [релизах](https://github.com/dirusanov/vaulto-note-mac/releases/latest) и перетащите приложение в «Программы»; при первом запуске нажмите на нём правой кнопкой → «Открыть» (на macOS 15+ — Системные настройки → Конфиденциальность и безопасность → «Всё равно открыть»).
 
 ## Credits
 
