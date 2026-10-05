@@ -31,5 +31,5 @@ if let flag = CommandLine.arguments.firstIndex(of: "--transcribe"), CommandLine.
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
-app.setActivationPolicy(.accessory)
+app.setActivationPolicy(Settings.showInDock ? .regular : .accessory)
 app.run()

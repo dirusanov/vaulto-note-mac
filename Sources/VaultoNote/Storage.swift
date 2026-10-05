@@ -50,6 +50,11 @@ enum Settings {
         set { defaults.set(newValue, forKey: "modelID") }
     }
 
+    static var showInDock: Bool {
+        get { defaults.object(forKey: "showInDock") as? Bool ?? true }
+        set { defaults.set(newValue, forKey: "showInDock") }
+    }
+
     static var trailingSpace: Bool {
         get { defaults.object(forKey: "trailingSpace") as? Bool ?? true }
         set { defaults.set(newValue, forKey: "trailingSpace") }

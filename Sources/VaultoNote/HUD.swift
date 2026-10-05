@@ -19,7 +19,7 @@ final class HUDController {
     private let model = HUDModel()
     private lazy var panel: NSPanel = {
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 240, height: 44),
+            contentRect: NSRect(x: 0, y: 0, width: 252, height: 56),
             styleMask: [.nonactivatingPanel, .borderless],
             backing: .buffered,
             defer: true
@@ -71,7 +71,7 @@ private struct HUDView: View {
         HStack(spacing: 10) {
             switch model.state {
             case .recording:
-                Circle().fill(Color.red).frame(width: 10, height: 10)
+                Circle().fill(VaultoColor.error).frame(width: 10, height: 10)
                 LevelBars(level: model.level)
                 Text("Слушаю…")
             case .transcribing:
@@ -83,11 +83,14 @@ private struct HUDView: View {
                 EmptyView()
             }
         }
-        .font(.system(size: 13, weight: .medium))
-        .foregroundStyle(.white)
+        .font(.system(size: 13, weight: .semibold))
+        .foregroundStyle(VaultoColor.text)
+        .tint(VaultoColor.primary)
         .padding(.horizontal, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Capsule().fill(Color.black.opacity(0.78)))
+        .background(Capsule().fill(VaultoColor.surfaceElevated))
+        .overlay(Capsule().stroke(VaultoColor.border, lineWidth: 1))
+        .padding(6)
     }
 }
 
@@ -99,7 +102,7 @@ private struct LevelBars: View {
         HStack(spacing: 3) {
             ForEach(weights.indices, id: \.self) { i in
                 Capsule()
-                    .fill(Color.white)
+                    .fill(VaultoColor.primary)
                     .frame(width: 3, height: CGFloat(4 + 16 * min(1, level * weights[i])))
             }
         }

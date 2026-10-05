@@ -18,15 +18,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let history = HistoryStore()
     private let models = ModelManager()
 
+    private let status = AppStatus()
+    private lazy var mainWindow = MainWindowController(status: status, actions: WindowActions(
+        requestMicrophone: { [weak self] in self?.requestMicrophone() },
+        requestAccessibility: { [weak self] in self?.openAccessibility() },
+        selectLanguage: { [weak self] in self?.setLanguage($0) },
+        selectTriggerKey: { [weak self] in self?.setTriggerKey($0) },
+        selectModel: { [weak self] in self?.setModel(WhisperModel.find($0)) },
+        setTrailingSpace: { [weak self] in
+            Settings.trailingSpace = $0
+            self?.status.trailingSpace = $0
+        },
+        setShowInDock: { [weak self] in self?.setShowInDock($0) },
+        clearHistory: { [weak self] in self?.clearHistory() }
+    ))
+
     private var statusItem: NSStatusItem!
     private var phase: Phase = .idle
-    private var modelStatus = "Модель не загружена"
-    private var isModelReady = false
+    private var modelStatus = "Модель не загружена" {
+        didSet { status.modelStatus = modelStatus }
+    }
+    private var isModelReady = false {
+        didSet { status.isModelReady = isModelReady }
+    }
     private var trustTimer: Timer?
 
     // MARK: - Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.mainMenu = Self.makeMainMenu()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         let menu = NSMenu()
         menu.delegate = self
@@ -41,9 +61,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         hotkey.onInterrupted = { [weak self] in self?.cancelRecording() }
         hotkey.start()
 
-        AVCaptureDevice.requestAccess(for: .audio) { _ in }
+        status.modelStatus = modelStatus
+        status.history = history.entries
+        mainWindow.show()
+
+        requestMicrophone()
         ensureAccessibility()
         loadSelectedModel()
+    }
+
+    /// Clicking the app in Finder, Spotlight or the Dock while it runs brings the window back.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        mainWindow.show()
+        return true
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
+    }
+
+    private func requestMicrophone() {
+        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .audio) { _ in
+                DispatchQueue.main.async { self.status.refreshPermissions() }
+            }
+        case .authorized:
+            break
+        default:
+            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")!)
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -60,6 +107,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             timer.invalidate()
             self?.trustTimer = nil
             self?.hotkey.start()
+            self?.status.refreshPermissions()
             self?.hud.show(.message("Готово: удерживайте \(Settings.triggerKey.title) и говорите"))
         }
     }
@@ -102,6 +150,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 self.hud.show(.message("Не удалось скачать модель"))
             }
         }
+    }
+
+    /// Standard app menu so ⌘Q, ⌘W, ⌘C work while the app is in the Dock.
+    private static func makeMainMenu() -> NSMenu {
+        let main = NSMenu()
+
+        let appMenu = NSMenu()
+        appMenu.addItem(withTitle: "О Vaulto Note", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(.separator())
+        appMenu.addItem(withTitle: "Скрыть Vaulto Note", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        appMenu.addItem(withTitle: "Завершить Vaulto Note", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let appMenuItem = NSMenuItem(title: "Vaulto Note", action: nil, keyEquivalent: "")
+        appMenuItem.submenu = appMenu
+        main.addItem(appMenuItem)
+
+        let editMenu = NSMenu(title: "Правка")
+        editMenu.addItem(withTitle: "Скопировать", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Вставить", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "Выбрать все", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        let editMenuItem = NSMenuItem(title: "Правка", action: nil, keyEquivalent: "")
+        editMenuItem.submenu = editMenu
+        main.addItem(editMenuItem)
+
+        let windowMenu = NSMenu(title: "Окно")
+        windowMenu.addItem(withTitle: "Закрыть", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        windowMenu.addItem(withTitle: "Свернуть", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
+        let windowMenuItem = NSMenuItem(title: "Окно", action: nil, keyEquivalent: "")
+        windowMenuItem.submenu = windowMenu
+        main.addItem(windowMenuItem)
+
+        return main
     }
 
     // MARK: - Dictation
@@ -153,6 +232,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     language: transcript.language,
                     audioSeconds: transcript.audioSeconds
                 ))
+                self.status.history = self.history.entries
                 TextInserter.insert(transcript.text + (Settings.trailingSpace ? " " : ""))
             case .failure(let error):
                 self.hud.show(.message(error.localizedDescription))
@@ -262,6 +342,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(spaceItem)
 
         menu.addItem(.separator())
+        menu.addItem(item("Открыть окно Vaulto Note", #selector(openMainWindow)))
         menu.addItem(item("Выйти", #selector(NSApplication.terminate(_:)), key: "q"))
     }
 
@@ -296,26 +377,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func clearHistory() {
         history.clear()
+        status.history = []
+    }
+
+    @objc private func openMainWindow() {
+        mainWindow.show()
     }
 
     @objc private func selectLanguage(_ sender: NSMenuItem) {
-        Settings.language = DictationLanguage.all[sender.tag].code
+        setLanguage(DictationLanguage.all[sender.tag].code)
     }
 
     @objc private func selectTriggerKey(_ sender: NSMenuItem) {
-        Settings.triggerKey = TriggerKey.allCases[sender.tag]
-        hotkey.key = Settings.triggerKey
-        hotkey.start()
+        setTriggerKey(TriggerKey.allCases[sender.tag])
     }
 
     @objc private func selectModel(_ sender: NSMenuItem) {
-        let model = WhisperModel.all[sender.tag]
+        setModel(WhisperModel.all[sender.tag])
+    }
+
+    private func setLanguage(_ code: String) {
+        Settings.language = code
+        status.language = code
+    }
+
+    private func setTriggerKey(_ key: TriggerKey) {
+        Settings.triggerKey = key
+        status.triggerKey = key
+        hotkey.key = key
+        hotkey.start()
+    }
+
+    private func setModel(_ model: WhisperModel) {
         guard models.downloading == nil else {
             hud.show(.message("Дождитесь окончания загрузки"))
             return
         }
         Settings.modelID = model.id
+        status.modelID = model.id
         loadSelectedModel()
+    }
+
+    private func setShowInDock(_ show: Bool) {
+        Settings.showInDock = show
+        status.showInDock = show
+        NSApp.setActivationPolicy(show ? .regular : .accessory)
+        // Switching to .accessory hides the window along with the app; keep it on screen.
+        DispatchQueue.main.async { self.mainWindow.show() }
     }
 
     @objc private func openModelsFolder() {
@@ -324,5 +432,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleTrailingSpace() {
         Settings.trailingSpace.toggle()
+        status.trailingSpace = Settings.trailingSpace
     }
 }
