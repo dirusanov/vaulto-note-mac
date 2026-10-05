@@ -21,9 +21,12 @@ downloads it (~1.6 GB) into `~/Library/Application Support/VaultoNote/Models/`.
 
 ## Use
 
-- Hold **right ⌥ Option** (configurable: right ⌘, Fn/🌐), speak, release.
-- A press shorter than 0.35 s, or one combined with another key (⌥+letter), is ignored.
-- Menu bar icon → history (click to copy), language (auto-detect by default), model, key.
+- Hold **right ⌥ Option**, speak, release. Any single right-hand modifier, Fn, or a combo
+  such as ⌃⌥Space can be recorded on the Shortcuts page.
+- Modes: hold or tap (tap = hands-free, tap again to finish), hold only, press to start/stop.
+  Esc cancels. ⌥+letter while holding is treated as typing, not dictation.
+- Window pages: Overview, Shortcuts, Transcription (models, speech language, vocabulary),
+  Text insertion, History (search, per-day groups), General (interface language, login item).
 
 ## Models
 
@@ -41,14 +44,26 @@ downloads it (~1.6 GB) into `~/Library/Application Support/VaultoNote/Models/`.
 
 Prints the transcript and `[lang] load=… audio=… transcribe=…` timings to stderr.
 
+## Reviewing the UI
+
+```bash
+"build/Vaulto Note.app/Contents/MacOS/VaultoNote" --snapshot /tmp/snap ru en de
+```
+
+Renders every page in light and dark with sample data to PNG — the quickest way to check
+wrapping and alignment in long languages (German) after a layout change.
+
 ## Layout
 
 - `WhisperEngine` — whisper.cpp wrapper, serialized on one queue
 - `AudioRecorder` — AVAudioEngine → 16 kHz mono Float32
-- `HotkeyMonitor` — hold-to-talk on a modifier key (`flagsChanged`)
+- `AppController` — app state and the dictation pipeline; the window binds to it
+- `Hotkeys` — shortcut model, trigger modes, `flagsChanged` + Carbon hot keys
+- `MainWindow`, `Components`, `Theme` — SwiftUI window in the mobile app's palette
+- `Localization` — interface strings (en, ru, de, es, fr, pt, zh, ja)
 - `TextInserter` — clipboard + synthetic ⌘V, restores the previous clipboard
 - `TextCleanup` — port of the mobile app's Whisper hallucination filter
-- `HUD`, `AppDelegate` — floating indicator and the menu bar UI
+- `HUD`, `AppDelegate` — floating recording indicator, status bar menu, main menu
 
 Next steps: notes window with audio, then Vaulto account + E2EE sync (must stay
 byte-compatible with `vaulto_note_mobile/src/crypto/e2ee.ts`).

@@ -18,24 +18,32 @@ enum TextInserter {
 
     /// Pastes `text` into the focused field of the frontmost app via the clipboard,
     /// then puts the previous clipboard contents back.
-    static func insert(_ text: String) {
+    static func insert(_ text: String, restoreClipboard: Bool = true) {
         let pasteboard = NSPasteboard.general
         let saved = snapshot(pasteboard)
 
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
-        // Ask clipboard managers not to record this temporary entry.
-        pasteboard.setData(Data(), forType: NSPasteboard.PasteboardType("org.nspasteboard.TransientType"))
+        if restoreClipboard {
+            // Ask clipboard managers not to record this temporary entry.
+            pasteboard.setData(Data(), forType: NSPasteboard.PasteboardType("org.nspasteboard.TransientType"))
+        }
         let ourChange = pasteboard.changeCount
 
         postCommandV()
 
+        guard restoreClipboard else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             // Leave the clipboard alone if the user copied something meanwhile.
             guard pasteboard.changeCount == ourChange else { return }
             pasteboard.clearContents()
             if !saved.isEmpty { pasteboard.writeObjects(saved) }
         }
+    }
+
+    static func copy(_ text: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
     }
 
     private static func snapshot(_ pasteboard: NSPasteboard) -> [NSPasteboardItem] {

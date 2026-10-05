@@ -71,16 +71,18 @@ final class WhisperEngine {
     func transcribe(
         samples: [Float],
         language: String,
+        prompt: String = "",
         completion: @escaping (Result<Transcript, Error>) -> Void
     ) {
         queue.async {
-            let result = Result { try self.transcribeSync(samples: samples, language: language) }
+            let result = Result { try self.transcribeSync(samples: samples, language: language, prompt: prompt) }
             DispatchQueue.main.async { completion(result) }
         }
     }
 
     /// `language` is a Whisper code ("ru", "en", …) or "auto" for per-utterance detection.
-    func transcribeSync(samples input: [Float], language: String) throws -> Transcript {
+    /// `prompt` primes the decoder with names and terms so they come out spelled right.
+    func transcribeSync(samples input: [Float], language: String, prompt: String = "") throws -> Transcript {
         guard let ctx else { throw WhisperError.modelNotLoaded }
         let started = Date()
 
@@ -106,6 +108,11 @@ final class WhisperEngine {
         defer { free(languagePtr) }
         params.language = UnsafePointer(languagePtr)
         params.detect_language = false
+
+        let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        let promptPtr = trimmedPrompt.isEmpty ? nil : strdup(trimmedPrompt)
+        defer { free(promptPtr) }
+        params.initial_prompt = UnsafePointer(promptPtr)
 
         let code = samples.withUnsafeBufferPointer { buffer in
             whisper_full(ctx, params, buffer.baseAddress, Int32(buffer.count))

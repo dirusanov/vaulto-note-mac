@@ -59,9 +59,40 @@ enum Settings {
         set { defaults.set(newValue, forKey: "language") }
     }
 
-    static var triggerKey: TriggerKey {
-        get { defaults.string(forKey: "triggerKey").flatMap(TriggerKey.init) ?? .rightOption }
-        set { defaults.set(newValue.rawValue, forKey: "triggerKey") }
+    static var shortcut: Shortcut {
+        get { decode("shortcut") ?? .default }
+        set { encode(newValue, "shortcut") }
+    }
+
+    static var triggerMode: TriggerMode {
+        get { defaults.string(forKey: "triggerMode").flatMap(TriggerMode.init) ?? .hybrid }
+        set { defaults.set(newValue.rawValue, forKey: "triggerMode") }
+    }
+
+    static var cancelWithEscape: Bool {
+        get { bool("cancelWithEscape", default: true) }
+        set { defaults.set(newValue, forKey: "cancelWithEscape") }
+    }
+
+    /// Names and terms passed to Whisper as the initial prompt.
+    static var vocabulary: String {
+        get { defaults.string(forKey: "vocabulary") ?? "" }
+        set { defaults.set(newValue, forKey: "vocabulary") }
+    }
+
+    static var autoPaste: Bool {
+        get { bool("autoPaste", default: true) }
+        set { defaults.set(newValue, forKey: "autoPaste") }
+    }
+
+    static var restoreClipboard: Bool {
+        get { bool("restoreClipboard", default: true) }
+        set { defaults.set(newValue, forKey: "restoreClipboard") }
+    }
+
+    static var playSounds: Bool {
+        get { bool("playSounds", default: true) }
+        set { defaults.set(newValue, forKey: "playSounds") }
     }
 
     static var modelID: String {
@@ -70,13 +101,25 @@ enum Settings {
     }
 
     static var showInDock: Bool {
-        get { defaults.object(forKey: "showInDock") as? Bool ?? true }
+        get { bool("showInDock", default: true) }
         set { defaults.set(newValue, forKey: "showInDock") }
     }
 
     static var trailingSpace: Bool {
-        get { defaults.object(forKey: "trailingSpace") as? Bool ?? true }
+        get { bool("trailingSpace", default: true) }
         set { defaults.set(newValue, forKey: "trailingSpace") }
+    }
+
+    private static func bool(_ key: String, default value: Bool) -> Bool {
+        defaults.object(forKey: key) as? Bool ?? value
+    }
+
+    private static func decode<T: Decodable>(_ key: String) -> T? {
+        defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(T.self, from: $0) }
+    }
+
+    private static func encode<T: Encodable>(_ value: T, _ key: String) {
+        defaults.set(try? JSONEncoder().encode(value), forKey: key)
     }
 }
 
@@ -104,6 +147,11 @@ final class HistoryStore {
     func add(_ entry: HistoryEntry) {
         entries.insert(entry, at: 0)
         if entries.count > Self.limit { entries.removeLast(entries.count - Self.limit) }
+        save()
+    }
+
+    func delete(_ id: UUID) {
+        entries.removeAll { $0.id == id }
         save()
     }
 

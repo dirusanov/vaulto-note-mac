@@ -3,30 +3,31 @@ import SwiftUI
 
 enum HUDState: Equatable {
     case hidden
-    case recording
+    case recording(started: Date)
     case transcribing
     case message(String)
 }
 
 final class HUDModel: ObservableObject {
     @Published var state: HUDState = .hidden
-    @Published var level: Float = 0
+    /// Recent levels, oldest first, for the scrolling waveform.
+    @Published var levels: [Float] = Array(repeating: 0, count: 24)
 }
 
-/// Small floating capsule near the bottom of the screen. It never takes focus, so the
+/// Floating capsule near the bottom of the screen. It never takes focus, so the
 /// text still lands in the app the user was typing in.
 final class HUDController {
     private let model = HUDModel()
     private lazy var panel: NSPanel = {
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 252, height: 56),
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 72),
             styleMask: [.nonactivatingPanel, .borderless],
             backing: .buffered,
             defer: true
         )
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = true
+        panel.hasShadow = false
         panel.level = .statusBar
         panel.ignoresMouseEvents = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
@@ -37,6 +38,9 @@ final class HUDController {
 
     func show(_ state: HUDState) {
         hideWork?.cancel()
+        if case .recording = state {
+            model.levels = Array(repeating: 0, count: model.levels.count)
+        }
         model.state = state
         guard state != .hidden else {
             panel.orderOut(nil)
@@ -52,7 +56,8 @@ final class HUDController {
     }
 
     func setLevel(_ level: Float) {
-        model.level = level
+        model.levels.removeFirst()
+        model.levels.append(level)
     }
 
     private func position() {
@@ -60,53 +65,72 @@ final class HUDController {
         let screen = NSScreen.screens.first { $0.frame.contains(mouse) } ?? NSScreen.main
         guard let frame = screen?.visibleFrame else { return }
         let size = panel.frame.size
-        panel.setFrameOrigin(NSPoint(x: frame.midX - size.width / 2, y: frame.minY + 60))
+        panel.setFrameOrigin(NSPoint(x: frame.midX - size.width / 2, y: frame.minY + 40))
     }
 }
 
-private struct HUDView: View {
+struct HUDView: View {
     @ObservedObject var model: HUDModel
 
     var body: some View {
-        HStack(spacing: 10) {
-            switch model.state {
-            case .recording:
-                Circle().fill(VaultoColor.error).frame(width: 10, height: 10)
-                LevelBars(level: model.level)
-                Text(L10n.t("hud.listening"))
-            case .transcribing:
-                ProgressView().controlSize(.small)
-                Text(L10n.t("hud.transcribing"))
-            case .message(let text):
-                Text(text).lineLimit(2)
-            case .hidden:
-                EmptyView()
+        content
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(VaultoColor.text)
+            .padding(.horizontal, 16)
+            .frame(height: 44)
+            .background(Capsule().fill(VaultoColor.surfaceElevated))
+            .overlay(Capsule().stroke(VaultoColor.border, lineWidth: 1))
+            .shadow(color: .black.opacity(0.18), radius: 12, y: 4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch model.state {
+        case .recording(let started):
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(VaultoColor.error)
+                    .frame(width: 8, height: 8)
+                Waveform(levels: model.levels)
+                TimelineView(.periodic(from: started, by: 1)) { context in
+                    Text(Self.elapsed(from: started, to: context.date))
+                        .monospacedDigit()
+                }
+                Text(L10n.t("hud.esc_cancel"))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(VaultoColor.textTertiary)
             }
+        case .transcribing:
+            HStack(spacing: 10) {
+                ProgressView().controlSize(.small).tint(VaultoColor.primary)
+                Text(L10n.t("hud.transcribing"))
+            }
+        case .message(let text):
+            Text(text).lineLimit(2).multilineTextAlignment(.center)
+        case .hidden:
+            EmptyView()
         }
-        .font(.system(size: 13, weight: .semibold))
-        .foregroundStyle(VaultoColor.text)
-        .tint(VaultoColor.primary)
-        .padding(.horizontal, 16)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Capsule().fill(VaultoColor.surfaceElevated))
-        .overlay(Capsule().stroke(VaultoColor.border, lineWidth: 1))
-        .padding(6)
+    }
+
+    private static func elapsed(from start: Date, to now: Date) -> String {
+        let seconds = max(0, Int(now.timeIntervalSince(start)))
+        return String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
 }
 
-private struct LevelBars: View {
-    let level: Float
-    private let weights: [Float] = [0.5, 0.8, 1.0, 0.7, 0.45]
+private struct Waveform: View {
+    let levels: [Float]
 
     var body: some View {
-        HStack(spacing: 3) {
-            ForEach(weights.indices, id: \.self) { i in
+        HStack(alignment: .center, spacing: 2) {
+            ForEach(levels.indices, id: \.self) { i in
                 Capsule()
                     .fill(VaultoColor.primary)
-                    .frame(width: 3, height: CGFloat(4 + 16 * min(1, level * weights[i])))
+                    .frame(width: 2.5, height: CGFloat(3 + 18 * min(1, levels[i])))
             }
         }
-        .frame(height: 20)
-        .animation(.easeOut(duration: 0.08), value: level)
+        .frame(height: 22)
+        .animation(.easeOut(duration: 0.08), value: levels)
     }
 }

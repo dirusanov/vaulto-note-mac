@@ -28,8 +28,12 @@ enum L10n {
         return "en"
     }()
 
+    /// Forces a language without touching saved settings (snapshot renders).
+    static var override: String?
+
     /// Active interface language code.
     static var current: String {
+        if let override { return override }
         let chosen = Settings.interfaceLanguage
         return chosen == "system" ? systemLanguage : chosen
     }
@@ -84,10 +88,6 @@ enum L10n {
             "Loading model…", "Загружаю модель…", "Modell wird geladen…", "Cargando modelo…",
             "Chargement du modèle…", "Carregando modelo…", "正在加载模型…", "モデルを読み込み中…",
         ]),
-        "model.ready": row([
-            "%@ — ready", "%@ — готово", "%@ — bereit", "%@ — listo",
-            "%@ — prêt", "%@ — pronto", "%@ — 就绪", "%@ — 準備完了",
-        ]),
         "model.downloading": row([
             "Downloading %@… %d%%", "Скачиваю %@… %d%%", "Lade %@ herunter… %d%%", "Descargando %@… %d%%",
             "Téléchargement de %@… %d%%", "Baixando %@… %d%%", "正在下载 %@… %d%%", "%@ をダウンロード中… %d%%",
@@ -95,23 +95,6 @@ enum L10n {
         "model.download_error": row([
             "Download failed: %@", "Ошибка загрузки: %@", "Download fehlgeschlagen: %@", "Error de descarga: %@",
             "Échec du téléchargement : %@", "Falha no download: %@", "下载失败：%@", "ダウンロード失敗：%@",
-        ]),
-        "model.download_failed": row([
-            "Couldn't download the model", "Не удалось скачать модель", "Modell konnte nicht geladen werden",
-            "No se pudo descargar el modelo", "Impossible de télécharger le modèle", "Não foi possível baixar o modelo",
-            "无法下载模型", "モデルをダウンロードできませんでした",
-        ]),
-        "model.wait_download": row([
-            "Wait for the download to finish", "Дождитесь окончания загрузки", "Warten Sie, bis der Download fertig ist",
-            "Espera a que termine la descarga", "Attendez la fin du téléchargement", "Aguarde o fim do download",
-            "请等待下载完成", "ダウンロードの完了をお待ちください",
-        ]),
-        "model.download_suffix": row([
-            " — download", " — скачать", " — herunterladen", " — descargar",
-            " — télécharger", " — baixar", " — 下载", " — ダウンロード",
-        ]),
-        "model.compressed": row([
-            "compressed", "сжатая", "komprimiert", "comprimido", "compressé", "comprimido", "压缩版", "圧縮版",
         ]),
 
         // Errors
@@ -161,21 +144,7 @@ enum L10n {
             "Transcribing…", "Распознаю…", "Erkenne…", "Transcribiendo…", "Transcription…", "Transcrevendo…",
             "正在识别…", "認識中…",
         ]),
-        "hud.ready_hold": row([
-            "Ready: hold %@ and speak", "Готово: удерживайте %@ и говорите", "Bereit: %@ halten und sprechen",
-            "Listo: mantén %@ y habla", "Prêt : maintenez %@ et parlez", "Pronto: segure %@ e fale",
-            "就绪：按住 %@ 说话", "準備完了：%@ を押しながら話してください",
-        ]),
 
-        // Trigger keys
-        "key.right_option": row([
-            "Right ⌥ Option", "Правый ⌥ Option", "Rechte ⌥ Wahltaste", "⌥ Opción derecha",
-            "⌥ Option droite", "⌥ Option direita", "右 ⌥ Option", "右 ⌥ Option",
-        ]),
-        "key.right_command": row([
-            "Right ⌘ Command", "Правый ⌘ Command", "Rechte ⌘ Befehlstaste", "⌘ Comando derecha",
-            "⌘ Commande droite", "⌘ Command direita", "右 ⌘ Command", "右 ⌘ Command",
-        ]),
         "key.fn": row(["Fn / 🌐", "Fn / 🌐", "Fn / 🌐", "Fn / 🌐", "Fn / 🌐", "Fn / 🌐", "Fn / 🌐", "Fn / 🌐"]),
 
         // Languages
@@ -188,12 +157,6 @@ enum L10n {
             "Comme le système (%@)", "Como o sistema (%@)", "跟随系统（%@）", "システムと同じ（%@）",
         ]),
 
-        // Status bar menu
-        "menu.allow_accessibility": row([
-            "⚠️ Allow Accessibility…", "⚠️ Разрешить Универсальный доступ…", "⚠️ Bedienungshilfen erlauben…",
-            "⚠️ Permitir Accesibilidad…", "⚠️ Autoriser l'Accessibilité…", "⚠️ Permitir Acessibilidade…",
-            "⚠️ 允许辅助功能…", "⚠️ アクセシビリティを許可…",
-        ]),
         "menu.hold_to_speak": row([
             "Hold %@ and speak", "Удерживайте %@ и говорите", "%@ halten und sprechen", "Mantén %@ y habla",
             "Maintenez %@ et parlez", "Segure %@ e fale", "按住 %@ 说话", "%@ を押しながら話す",
@@ -206,12 +169,6 @@ enum L10n {
             "Start recording", "Начать запись", "Aufnahme starten", "Empezar a grabar",
             "Commencer l'enregistrement", "Começar a gravar", "开始录音", "録音を開始",
         ]),
-        "menu.history": row([
-            "History", "История", "Verlauf", "Historial", "Historique", "Histórico", "历史记录", "履歴",
-        ]),
-        "menu.history_empty": row([
-            "Nothing yet", "Пока пусто", "Noch leer", "Aún vacío", "Rien pour l'instant", "Nada ainda", "暂无内容", "まだありません",
-        ]),
         "menu.click_to_copy": row([
             "Click an entry to copy it", "Нажмите на запись, чтобы скопировать", "Zum Kopieren auf einen Eintrag klicken",
             "Haz clic en una entrada para copiarla", "Cliquez sur une entrée pour la copier", "Clique em um item para copiá-lo",
@@ -221,10 +178,6 @@ enum L10n {
             "Clear history", "Очистить историю", "Verlauf löschen", "Borrar historial",
             "Effacer l'historique", "Limpar histórico", "清除历史记录", "履歴を消去",
         ]),
-        "menu.open_models_folder": row([
-            "Open models folder", "Открыть папку с моделями", "Modellordner öffnen", "Abrir carpeta de modelos",
-            "Ouvrir le dossier des modèles", "Abrir pasta de modelos", "打开模型文件夹", "モデルフォルダを開く",
-        ]),
         "menu.open_window": row([
             "Open Vaulto Note window", "Открыть окно Vaulto Note", "Vaulto Note-Fenster öffnen", "Abrir ventana de Vaulto Note",
             "Ouvrir la fenêtre Vaulto Note", "Abrir janela do Vaulto Note", "打开 Vaulto Note 窗口", "Vaulto Note ウインドウを開く",
@@ -233,10 +186,6 @@ enum L10n {
             "Quit", "Выйти", "Beenden", "Salir", "Quitter", "Sair", "退出", "終了",
         ]),
 
-        // Settings (shared by the menu and the window)
-        "settings.title": row([
-            "Settings", "Настройки", "Einstellungen", "Ajustes", "Réglages", "Ajustes", "设置", "設定",
-        ]),
         "settings.interface_language": row([
             "Interface language", "Язык интерфейса", "Sprache der Oberfläche", "Idioma de la interfaz",
             "Langue de l'interface", "Idioma da interface", "界面语言", "表示言語",
@@ -244,9 +193,6 @@ enum L10n {
         "settings.speech_language": row([
             "Speech language", "Язык речи", "Sprache der Sprache", "Idioma del habla",
             "Langue parlée", "Idioma da fala", "语音语言", "音声の言語",
-        ]),
-        "settings.key": row([
-            "Key", "Клавиша", "Taste", "Tecla", "Touche", "Tecla", "按键", "キー",
         ]),
         "settings.model": row([
             "Model", "Модель", "Modell", "Modelo", "Modèle", "Modelo", "模型", "モデル",
@@ -260,11 +206,6 @@ enum L10n {
             "Icône dans le Dock", "Ícone no Dock", "在程序坞中显示图标", "Dock にアイコンを表示",
         ]),
 
-        // Main window
-        "window.permissions_needed": row([
-            "Permissions needed", "Нужны разрешения", "Berechtigungen erforderlich", "Se necesitan permisos",
-            "Autorisations requises", "Permissões necessárias", "需要权限", "許可が必要です",
-        ]),
         "window.allow": row([
             "Allow", "Разрешить", "Erlauben", "Permitir", "Autoriser", "Permitir", "允许", "許可",
         ]),
@@ -288,37 +229,6 @@ enum L10n {
             "Para detectar a tecla em outros apps e colar o texto",
             "用于在其他应用中捕获按键并粘贴文本",
             "他のアプリでキーを検出し、テキストを貼り付けるため",
-        ]),
-        "window.howto_title": row([
-            "How to use", "Как пользоваться", "So funktioniert's", "Cómo usarlo",
-            "Mode d'emploi", "Como usar", "使用方法", "使い方",
-        ]),
-        // %@ is the key name, drawn bold in the window.
-        "window.howto_body": row([
-            "Put the cursor in any field, hold %@ and speak. Release — the text appears in the field.",
-            "Поставьте курсор в любое поле, удерживайте %@ и говорите. Отпустите — текст появится в поле.",
-            "Setzen Sie den Cursor in ein Feld, halten Sie %@ und sprechen Sie. Loslassen — der Text erscheint im Feld.",
-            "Coloca el cursor en cualquier campo, mantén %@ y habla. Suelta y el texto aparecerá en el campo.",
-            "Placez le curseur dans un champ, maintenez %@ et parlez. Relâchez : le texte apparaît dans le champ.",
-            "Coloque o cursor em qualquer campo, segure %@ e fale. Solte e o texto aparecerá no campo.",
-            "将光标放在任意输入框中，按住 %@ 说话。松开后文本就会出现在输入框中。",
-            "任意の入力欄にカーソルを置き、%@ を押しながら話します。離すとテキストが入力されます。",
-        ]),
-        "window.howto_note": row([
-            "A short tap or the key combined with a letter doesn't start recording.",
-            "Короткое нажатие или клавиша вместе с буквой не запускают запись.",
-            "Ein kurzes Tippen oder die Taste zusammen mit einem Buchstaben startet keine Aufnahme.",
-            "Una pulsación corta o la tecla junto con una letra no inician la grabación.",
-            "Un appui bref ou la touche combinée à une lettre ne lance pas l'enregistrement.",
-            "Um toque curto ou a tecla junto com uma letra não iniciam a gravação.",
-            "短按或与字母键组合按下不会开始录音。",
-            "短く押した場合や文字キーと組み合わせた場合は録音しません。",
-        ]),
-        "window.history": row([
-            "History", "История", "Verlauf", "Historial", "Historique", "Histórico", "历史记录", "履歴",
-        ]),
-        "window.clear": row([
-            "Clear", "Очистить", "Löschen", "Borrar", "Effacer", "Limpar", "清除", "消去",
         ]),
         "window.history_empty": row([
             "Your dictations will appear here", "Здесь появятся ваши диктовки", "Hier erscheinen Ihre Diktate",
@@ -363,6 +273,266 @@ enum L10n {
         ]),
         "mainmenu.minimize": row([
             "Minimize", "Свернуть", "Im Dock ablegen", "Minimizar", "Placer dans le Dock", "Minimizar", "最小化", "しまう",
+        ]),
+
+        // Redesign: pages, shortcuts, models, output, history, general
+        "common.recommended": row([
+            "Recommended", "Рекомендуем", "Empfohlen", "Recomendado", "Recommandé", "Recomendado", "推荐", "おすすめ",
+        ]),
+        "status.ready": row([
+            "Ready to dictate", "Готово к диктовке", "Bereit zum Diktieren", "Listo para dictar", "Prêt à dicter", "Pronto para ditar", "可以开始听写", "音声入力の準備完了",
+        ]),
+        "status.needs_permissions": row([
+            "Permissions needed", "Нужны разрешения", "Berechtigungen nötig", "Faltan permisos", "Autorisations requises", "Faltam permissões", "需要权限", "許可が必要です",
+        ]),
+        "page.home": row([
+            "Overview", "Обзор", "Übersicht", "Inicio", "Aperçu", "Visão geral", "概览", "概要",
+        ]),
+        "page.shortcuts": row([
+            "Shortcuts", "Горячие клавиши", "Kurzbefehle", "Atajos", "Raccourcis", "Atalhos", "快捷键", "ショートカット",
+        ]),
+        "page.transcription": row([
+            "Transcription", "Распознавание", "Erkennung", "Transcripción", "Transcription", "Transcrição", "识别", "文字起こし",
+        ]),
+        "page.output": row([
+            "Text insertion", "Вставка текста", "Texteinfügen", "Inserción de texto", "Insertion du texte", "Inserção de texto", "文本插入", "テキスト入力",
+        ]),
+        "page.history": row([
+            "History", "История", "Verlauf", "Historial", "Historique", "Histórico", "历史记录", "履歴",
+        ]),
+        "page.general": row([
+            "General", "Основные", "Allgemein", "General", "Général", "Geral", "通用", "一般",
+        ]),
+        "home.hero_title": row([
+            "Speak — Vaulto types", "Говорите — Vaulto напечатает", "Sprechen Sie — Vaulto tippt", "Habla y Vaulto escribe", "Parlez, Vaulto écrit", "Fale e o Vaulto digita", "说话，Vaulto 帮你打字", "話すだけで Vaulto が入力",
+        ]),
+        "home.change_shortcut": row([
+            "Change shortcut", "Изменить клавишу", "Kurzbefehl ändern", "Cambiar atajo", "Modifier le raccourci", "Alterar atalho", "更改快捷键", "ショートカットを変更",
+        ]),
+        "home.try_title": row([
+            "Try it here", "Попробуйте здесь", "Hier ausprobieren", "Pruébalo aquí", "Essayez ici", "Experimente aqui", "在这里试试", "ここで試す",
+        ]),
+        "home.try_placeholder": row([
+            "Click here, hold %@ and say something…", "Нажмите сюда, удерживайте %@ и скажите что-нибудь…", "Hier klicken, %@ halten und etwas sagen…", "Haz clic aquí, mantén %@ y di algo…", "Cliquez ici, maintenez %@ et dites quelque chose…", "Clique aqui, segure %@ e diga algo…", "点击这里，按住 %@ 说点什么…", "ここをクリックし、%@ を押しながら話してみてください…",
+        ]),
+        "home.stat_dictations": row([
+            "Dictations", "Диктовок", "Diktate", "Dictados", "Dictées", "Ditados", "听写次数", "音声入力",
+        ]),
+        "home.stat_words": row([
+            "Words", "Слов", "Wörter", "Palabras", "Mots", "Palavras", "字词", "単語",
+        ]),
+        "home.stat_minutes": row([
+            "Minutes of speech", "Минут речи", "Minuten Sprache", "Minutos de voz", "Minutes de parole", "Minutos de fala", "语音分钟", "話した分数",
+        ]),
+        "home.recent": row([
+            "Recent", "Недавние", "Zuletzt", "Recientes", "Récents", "Recentes", "最近", "最近",
+        ]),
+        "home.show_all": row([
+            "Show all", "Вся история", "Alle anzeigen", "Ver todo", "Tout afficher", "Ver tudo", "查看全部", "すべて表示",
+        ]),
+        "setup.title": row([
+            "Finish setup", "Завершите настройку", "Einrichtung abschließen", "Completa la configuración", "Terminez la configuration", "Conclua a configuração", "完成设置", "セットアップを完了",
+        ]),
+        "setup.model": row([
+            "Model %@", "Модель %@", "Modell %@", "Modelo %@", "Modèle %@", "Modelo %@", "模型 %@", "モデル %@",
+        ]),
+        "setup.model_detail": row([
+            "Downloaded once, then works offline", "Скачивается один раз, дальше работает без интернета", "Einmal laden, danach offline nutzbar", "Se descarga una vez y luego funciona sin conexión", "Téléchargé une fois, puis fonctionne hors ligne", "Baixado uma vez, depois funciona offline", "只需下载一次，之后可离线使用", "一度ダウンロードすればオフラインで動作",
+        ]),
+        "key.right": row([
+            "Right %@", "Правый %@", "Rechts %@", "%@ derecha", "%@ droite", "%@ direita", "右 %@", "右 %@",
+        ]),
+        "key.right_inline": row([
+            "right %@", "правый %@", "rechte %@-Taste", "%@ derecha", "%@ droite", "%@ direita", "右 %@", "右 %@",
+        ]),
+        "key.space": row([
+            "Space", "Пробел", "Leertaste", "Espacio", "Espace", "Espaço", "空格", "スペース",
+        ]),
+        "shortcut.title": row([
+            "Dictation shortcut", "Клавиша диктовки", "Diktier-Kurzbefehl", "Atajo de dictado", "Raccourci de dictée", "Atalho de ditado", "听写快捷键", "音声入力のショートカット",
+        ]),
+        "shortcut.detail": row([
+            "A single key like right ⌥, or a combination like ⌃⌥Space", "Одна клавиша, например правый ⌥, или сочетание вроде ⌃⌥Пробел", "Eine einzelne Taste wie rechts ⌥ oder eine Kombination wie ⌃⌥Leertaste", "Una sola tecla como ⌥ derecha o una combinación como ⌃⌥Espacio", "Une seule touche comme ⌥ droite, ou une combinaison comme ⌃⌥Espace", "Uma tecla como ⌥ direita ou uma combinação como ⌃⌥Espaço", "单个按键（如右 ⌥）或组合键（如 ⌃⌥空格）", "右 ⌥ のような単独キー、または ⌃⌥スペースのような組み合わせ",
+        ]),
+        "shortcut.presets": row([
+            "Quick picks", "Быстрый выбор", "Schnellauswahl", "Opciones rápidas", "Choix rapide", "Escolha rápida", "快速选择", "クイック選択",
+        ]),
+        "shortcut.press_keys": row([
+            "Press keys…", "Нажмите клавиши…", "Tasten drücken…", "Pulsa las teclas…", "Appuyez sur les touches…", "Pressione as teclas…", "请按键…", "キーを押してください…",
+        ]),
+        "shortcut.click_to_change": row([
+            "Click to record a new shortcut; Esc cancels", "Нажмите, чтобы задать новое сочетание; Esc — отмена", "Klicken, um einen neuen Kurzbefehl aufzunehmen; Esc bricht ab", "Haz clic para grabar un atajo nuevo; Esc cancela", "Cliquez pour enregistrer un nouveau raccourci ; Échap annule", "Clique para gravar um novo atalho; Esc cancela", "点击录制新快捷键，按 Esc 取消", "クリックして新しいショートカットを記録（Esc でキャンセル）",
+        ]),
+        "shortcut.use_right_key": row([
+            "Use the right-hand key: the left one is busy with regular shortcuts", "Используйте правую клавишу: левая занята обычными сочетаниями", "Nehmen Sie die rechte Taste: Die linke wird für normale Kurzbefehle gebraucht", "Usa la tecla derecha: la izquierda se usa en atajos normales", "Utilisez la touche de droite : celle de gauche sert aux raccourcis habituels", "Use a tecla da direita: a da esquerda é usada em atalhos comuns", "请使用右侧按键：左侧按键用于常规快捷键", "右側のキーを使ってください（左側は通常のショートカットで使われます）",
+        ]),
+        "shortcut.add_modifier": row([
+            "Add ⌘, ⌥ or ⌃ to the key", "Добавьте к клавише ⌘, ⌥ или ⌃", "Fügen Sie ⌘, ⌥ oder ⌃ hinzu", "Añade ⌘, ⌥ o ⌃ a la tecla", "Ajoutez ⌘, ⌥ ou ⌃ à la touche", "Adicione ⌘, ⌥ ou ⌃ à tecla", "请加上 ⌘、⌥ 或 ⌃", "⌘、⌥、⌃ のいずれかを組み合わせてください",
+        ]),
+        "shortcut.fn_hint": row([
+            "If 🌐 opens emoji or system dictation, set System Settings → Keyboard → “Press 🌐 key to” → Do Nothing.", "Если 🌐 открывает эмодзи или системную диктовку: Системные настройки → Клавиатура → «Нажатие клавиши 🌐» → «Ничего не делать».", "Wenn 🌐 Emojis oder das System-Diktat öffnet: Systemeinstellungen → Tastatur → „Drücken der Taste 🌐“ → „Keine Aktion“.", "Si 🌐 abre los emojis o el dictado del sistema: Ajustes del Sistema → Teclado → «Pulsar la tecla 🌐» → «No hacer nada».", "Si 🌐 ouvre les émojis ou la dictée système : Réglages Système → Clavier → « Appuyer sur la touche 🌐 » → « Ne rien faire ».", "Se 🌐 abre emojis ou o ditado do sistema: Ajustes do Sistema → Teclado → “Pressionar a tecla 🌐” → “Não fazer nada”.", "如果 🌐 会打开表情或系统听写：系统设置 → 键盘 → “按下 🌐 键时” → “不执行任何操作”。", "🌐 で絵文字やシステムの音声入力が開く場合：システム設定 → キーボード →「🌐キーを押して」→「何もしない」。",
+        ]),
+        "shortcut.needs_accessibility": row([
+            "A single key works in other apps only with Accessibility allowed (General → Permissions).", "Одиночная клавиша работает в других приложениях только с разрешением «Универсальный доступ» (Основные → Разрешения).", "Eine einzelne Taste funktioniert in anderen Apps nur mit erlaubten Bedienungshilfen (Allgemein → Berechtigungen).", "Una sola tecla funciona en otras apps solo con Accesibilidad permitida (General → Permisos).", "Une touche seule ne fonctionne dans les autres apps qu'avec l'Accessibilité autorisée (Général → Autorisations).", "Uma tecla única só funciona em outros apps com a Acessibilidade permitida (Geral → Permissões).", "单个按键需开启“辅助功能”权限才能在其他应用中使用（通用 → 权限）。", "単独キーを他のアプリで使うにはアクセシビリティの許可が必要です（一般 → 許可）。",
+        ]),
+        "shortcut.escape": row([
+            "Cancel with Esc", "Отмена по Esc", "Mit Esc abbrechen", "Cancelar con Esc", "Annuler avec Échap", "Cancelar com Esc", "按 Esc 取消", "Esc でキャンセル",
+        ]),
+        "shortcut.escape_detail": row([
+            "Discards the recording without inserting anything", "Запись удаляется, ничего не вставляется", "Verwirft die Aufnahme, ohne etwas einzufügen", "Descarta la grabación sin insertar nada", "Abandonne l'enregistrement sans rien insérer", "Descarta a gravação sem inserir nada", "放弃录音，不插入任何内容", "録音を破棄し、何も入力しません",
+        ]),
+        "mode.title": row([
+            "Recording mode", "Режим записи", "Aufnahmemodus", "Modo de grabación", "Mode d'enregistrement", "Modo de gravação", "录音模式", "録音モード",
+        ]),
+        "mode.hybrid.title": row([
+            "Hold or tap", "Удержание или нажатие", "Halten oder tippen", "Mantener o pulsar", "Maintenir ou appuyer", "Segurar ou tocar", "按住或轻点", "長押しまたはタップ",
+        ]),
+        "mode.hybrid.summary": row([
+            "Hold %@ to talk and release to insert. Tap it once for hands-free recording, tap again to finish.", "Удерживайте %@ и говорите, отпустите — текст вставится. Короткое нажатие включает запись без рук, повторное — завершает.", "Halten Sie %@ zum Sprechen und lassen Sie los zum Einfügen. Einmal tippen für freihändige Aufnahme, erneut tippen zum Beenden.", "Mantén %@ para hablar y suelta para insertar. Púlsalo una vez para grabar sin manos y otra vez para terminar.", "Maintenez %@ pour parler et relâchez pour insérer. Appuyez une fois pour enregistrer mains libres, à nouveau pour terminer.", "Segure %@ para falar e solte para inserir. Toque uma vez para gravar sem as mãos e de novo para terminar.", "按住 %@ 说话，松开即插入。轻点一次进入免按住录音，再点一次结束。", "%@ を押しながら話し、離すと入力されます。1回タップでハンズフリー録音、もう一度タップで終了。",
+        ]),
+        "mode.hold.title": row([
+            "Hold to talk", "Только удержание", "Nur halten", "Solo mantener", "Maintenir pour parler", "Segurar para falar", "仅按住", "長押しのみ",
+        ]),
+        "mode.hold.summary": row([
+            "Recording lasts while you hold %@. Short taps are ignored.", "Запись идёт, пока вы держите %@. Короткие нажатия игнорируются.", "Die Aufnahme läuft, solange Sie %@ halten. Kurzes Tippen wird ignoriert.", "Se graba mientras mantienes %@. Las pulsaciones cortas se ignoran.", "L'enregistrement dure tant que vous maintenez %@. Les appuis brefs sont ignorés.", "A gravação dura enquanto você segura %@. Toques curtos são ignorados.", "按住 %@ 期间录音，短按会被忽略。", "%@ を押している間だけ録音します。短いタップは無視されます。",
+        ]),
+        "mode.toggle.title": row([
+            "Press to start and stop", "Нажатие — старт и стоп", "Drücken zum Starten und Stoppen", "Pulsar para iniciar y parar", "Appuyer pour démarrer et arrêter", "Pressionar para iniciar e parar", "按一下开始，再按结束", "押して開始・停止",
+        ]),
+        "mode.toggle.summary": row([
+            "Press %@ to start recording and press it again to insert the text.", "Нажмите %@, чтобы начать запись, и ещё раз, чтобы вставить текст.", "Drücken Sie %@ zum Starten und erneut, um den Text einzufügen.", "Pulsa %@ para empezar a grabar y otra vez para insertar el texto.", "Appuyez sur %@ pour démarrer, puis à nouveau pour insérer le texte.", "Pressione %@ para começar a gravar e de novo para inserir o texto.", "按 %@ 开始录音，再按一次插入文本。", "%@ を押して録音を開始し、もう一度押すとテキストを入力します。",
+        ]),
+        "model.summary.turbo": row([
+            "Fast and accurate, about 100 languages. The best choice for most Macs.", "Быстрая и точная, около 100 языков. Лучший выбор для большинства Mac.", "Schnell und genau, rund 100 Sprachen. Die beste Wahl für die meisten Macs.", "Rápido y preciso, unos 100 idiomas. La mejor opción para la mayoría de los Mac.", "Rapide et précis, environ 100 langues. Le meilleur choix pour la plupart des Mac.", "Rápido e preciso, cerca de 100 idiomas. A melhor escolha para a maioria dos Macs.", "快速准确，支持约 100 种语言。适合大多数 Mac。", "高速かつ高精度で約100言語に対応。ほとんどの Mac に最適です。",
+        ]),
+        "model.summary.turbo-q5": row([
+            "Same model, compressed: three times smaller, slightly less accurate.", "Та же модель в сжатом виде: втрое меньше, чуть менее точная.", "Dasselbe Modell, komprimiert: dreimal kleiner, etwas ungenauer.", "El mismo modelo comprimido: tres veces más pequeño y algo menos preciso.", "Le même modèle compressé : trois fois plus petit, un peu moins précis.", "O mesmo modelo comprimido: três vezes menor e um pouco menos preciso.", "同一模型的压缩版：体积缩小三倍，准确度略低。", "同じモデルの圧縮版。サイズは約3分の1、精度はわずかに低下します。",
+        ]),
+        "model.summary.large": row([
+            "Maximum accuracy for difficult audio and rare languages. Slower and twice as large.", "Максимальная точность для сложной записи и редких языков. Медленнее и вдвое больше.", "Maximale Genauigkeit für schwierige Aufnahmen und seltene Sprachen. Langsamer und doppelt so groß.", "Máxima precisión para audio difícil e idiomas poco comunes. Más lento y el doble de grande.", "Précision maximale pour l'audio difficile et les langues rares. Plus lent et deux fois plus lourd.", "Precisão máxima para áudio difícil e idiomas raros. Mais lento e duas vezes maior.", "针对困难音频和小语种的最高准确度。速度较慢，体积大一倍。", "聞き取りにくい音声や珍しい言語でも最高精度。速度は遅く、サイズは2倍です。",
+        ]),
+        "model.speed": row([
+            "Speed", "Скорость", "Tempo", "Velocidad", "Vitesse", "Velocidade", "速度", "速度",
+        ]),
+        "model.accuracy": row([
+            "Accuracy", "Точность", "Genauigkeit", "Precisión", "Précision", "Precisão", "准确度", "精度",
+        ]),
+        "model.download": row([
+            "Download", "Скачать", "Laden", "Descargar", "Télécharger", "Baixar", "下载", "ダウンロード",
+        ]),
+        "model.downloaded": row([
+            "Downloaded", "Скачана", "Geladen", "Descargado", "Téléchargé", "Baixado", "已下载", "ダウンロード済み",
+        ]),
+        "model.active": row([
+            "In use", "Используется", "Aktiv", "En uso", "Utilisé", "Em uso", "使用中", "使用中",
+        ]),
+        "model.use": row([
+            "Use this model", "Использовать", "Dieses Modell verwenden", "Usar este modelo", "Utiliser ce modèle", "Usar este modelo", "使用此模型", "このモデルを使う",
+        ]),
+        "model.delete": row([
+            "Delete", "Удалить", "Löschen", "Eliminar", "Supprimer", "Excluir", "删除", "削除",
+        ]),
+        "model.delete_confirm": row([
+            "Delete %@ from this Mac?", "Удалить %@ с этого Mac?", "%@ von diesem Mac löschen?", "¿Eliminar %@ de este Mac?", "Supprimer %@ de ce Mac ?", "Excluir %@ deste Mac?", "要从这台 Mac 删除 %@ 吗？", "%@ をこの Mac から削除しますか？",
+        ]),
+        "model.cancel": row([
+            "Cancel download", "Отменить загрузку", "Download abbrechen", "Cancelar descarga", "Annuler le téléchargement", "Cancelar download", "取消下载", "ダウンロードを中止",
+        ]),
+        "model.private_note": row([
+            "Models run entirely on this Mac: audio and text never leave it.", "Модели работают полностью на этом Mac: звук и текст никуда не отправляются.", "Die Modelle laufen vollständig auf diesem Mac: Audio und Text verlassen ihn nie.", "Los modelos funcionan por completo en este Mac: el audio y el texto no salen de él.", "Les modèles tournent entièrement sur ce Mac : l'audio et le texte n'en sortent jamais.", "Os modelos rodam inteiramente neste Mac: áudio e texto nunca saem dele.", "模型完全在这台 Mac 上运行：音频和文本不会被发送出去。", "モデルはこの Mac 上だけで動作し、音声やテキストが外部に送られることはありません。",
+        ]),
+        "language.detail": row([
+            "Auto-detect picks the language of each phrase. Pick one if short phrases come out in the wrong language.", "Автоопределение выбирает язык для каждой фразы. Укажите язык, если короткие фразы распознаются не на том языке.", "Die automatische Erkennung wählt die Sprache je Satz. Wählen Sie eine feste Sprache, wenn kurze Sätze falsch erkannt werden.", "La detección automática elige el idioma de cada frase. Elige uno si las frases cortas salen en otro idioma.", "La détection automatique choisit la langue de chaque phrase. Fixez-la si les phrases courtes sortent dans la mauvaise langue.", "A detecção automática escolhe o idioma de cada frase. Fixe um se frases curtas saírem no idioma errado.", "自动检测会为每句话判断语言。如果短句常被识别成别的语言，请手动指定。", "自動検出はフレーズごとに言語を判定します。短いフレーズが別の言語になる場合は固定してください。",
+        ]),
+        "vocabulary.title": row([
+            "Vocabulary", "Словарь", "Wortschatz", "Vocabulario", "Vocabulaire", "Vocabulário", "词汇表", "用語集",
+        ]),
+        "vocabulary.detail": row([
+            "Names, brands and terms the model should spell your way, separated by commas.", "Имена, названия и термины, которые модель должна писать по-вашему, через запятую.", "Namen, Marken und Begriffe, die das Modell so schreiben soll wie Sie – durch Kommas getrennt.", "Nombres, marcas y términos que el modelo debe escribir a tu manera, separados por comas.", "Noms, marques et termes que le modèle doit écrire à votre façon, séparés par des virgules.", "Nomes, marcas e termos que o modelo deve escrever do seu jeito, separados por vírgulas.", "希望模型按你的写法输出的人名、品牌和术语，用逗号分隔。", "モデルに指定どおり表記してほしい名前・ブランド・用語をカンマ区切りで入力します。",
+        ]),
+        "vocabulary.placeholder": row([
+            "e.g. Vaulto, Kubernetes, TelePetr", "например: Vaulto, Kubernetes, TelePetr", "z. B. Vaulto, Kubernetes, TelePetr", "p. ej.: Vaulto, Kubernetes, TelePetr", "ex. : Vaulto, Kubernetes, TelePetr", "ex.: Vaulto, Kubernetes, TelePetr", "例如：Vaulto, Kubernetes, TelePetr", "例：Vaulto, Kubernetes, TelePetr",
+        ]),
+        "output.auto_paste": row([
+            "Paste automatically", "Вставлять автоматически", "Automatisch einfügen", "Pegar automáticamente", "Coller automatiquement", "Colar automaticamente", "自动粘贴", "自動で貼り付け",
+        ]),
+        "output.auto_paste_detail": row([
+            "Types the text where the cursor is. When off, the text is only copied to the clipboard.", "Текст появляется там, где стоит курсор. Если выключено, текст только копируется в буфер обмена.", "Fügt den Text an der Cursorposition ein. Wenn aus, wird er nur in die Zwischenablage kopiert.", "Escribe el texto donde está el cursor. Si está desactivado, solo se copia al portapapeles.", "Insère le texte à l'emplacement du curseur. Désactivé, il est seulement copié dans le presse-papiers.", "Insere o texto onde está o cursor. Desativado, ele só é copiado para a área de transferência.", "在光标处输入文本。关闭后仅复制到剪贴板。", "カーソル位置にテキストを入力します。オフの場合はクリップボードにコピーするだけです。",
+        ]),
+        "output.restore_clipboard": row([
+            "Keep my clipboard", "Сохранять буфер обмена", "Zwischenablage behalten", "Conservar mi portapapeles", "Conserver mon presse-papiers", "Manter minha área de transferência", "保留剪贴板内容", "クリップボードを保持",
+        ]),
+        "output.restore_clipboard_detail": row([
+            "Puts back what you had copied before the dictation", "Возвращает в буфер то, что вы скопировали до диктовки", "Stellt wieder her, was Sie vor dem Diktat kopiert hatten", "Restaura lo que habías copiado antes del dictado", "Remet ce que vous aviez copié avant la dictée", "Restaura o que você havia copiado antes do ditado", "恢复听写前你复制的内容", "音声入力前にコピーしていた内容を元に戻します",
+        ]),
+        "output.trailing_space_detail": row([
+            "So several dictations in a row don't stick together", "Чтобы несколько диктовок подряд не слипались", "Damit mehrere Diktate hintereinander nicht zusammenkleben", "Para que varios dictados seguidos no se peguen", "Pour que plusieurs dictées d'affilée ne se collent pas", "Para que vários ditados seguidos não fiquem colados", "避免连续听写的内容粘在一起", "連続した音声入力がくっつかないように",
+        ]),
+        "output.sounds": row([
+            "Sounds", "Звуки", "Töne", "Sonidos", "Sons", "Sons", "提示音", "サウンド",
+        ]),
+        "output.sounds_detail": row([
+            "A soft sound when recording starts and stops", "Тихий звук в начале и в конце записи", "Ein leiser Ton bei Start und Ende der Aufnahme", "Un sonido suave al empezar y terminar la grabación", "Un son discret au début et à la fin de l'enregistrement", "Um som suave ao iniciar e parar a gravação", "录音开始和结束时播放轻柔提示音", "録音の開始時と終了時に小さな音を鳴らします",
+        ]),
+        "history.search": row([
+            "Search history", "Поиск по истории", "Verlauf durchsuchen", "Buscar en el historial", "Rechercher dans l'historique", "Pesquisar no histórico", "搜索历史记录", "履歴を検索",
+        ]),
+        "history.today": row([
+            "Today", "Сегодня", "Heute", "Hoy", "Aujourd'hui", "Hoje", "今天", "今日",
+        ]),
+        "history.yesterday": row([
+            "Yesterday", "Вчера", "Gestern", "Ayer", "Hier", "Ontem", "昨天", "昨日",
+        ]),
+        "history.delete": row([
+            "Delete", "Удалить", "Löschen", "Eliminar", "Supprimer", "Excluir", "删除", "削除",
+        ]),
+        "history.copied": row([
+            "Copied", "Скопировано", "Kopiert", "Copiado", "Copié", "Copiado", "已复制", "コピーしました",
+        ]),
+        "history.no_results": row([
+            "Nothing found", "Ничего не найдено", "Nichts gefunden", "Sin resultados", "Aucun résultat", "Nada encontrado", "未找到结果", "見つかりませんでした",
+        ]),
+        "history.clear_confirm": row([
+            "Delete all dictations? This can't be undone.", "Удалить все диктовки? Это нельзя отменить.", "Alle Diktate löschen? Das lässt sich nicht rückgängig machen.", "¿Eliminar todos los dictados? No se puede deshacer.", "Supprimer toutes les dictées ? Action irréversible.", "Excluir todos os ditados? Isso não pode ser desfeito.", "删除所有听写记录？此操作无法撤销。", "すべての音声入力を削除しますか？元に戻せません。",
+        ]),
+        "general.launch_at_login": row([
+            "Open at login", "Запускать при входе", "Beim Anmelden öffnen", "Abrir al iniciar sesión", "Ouvrir à l'ouverture de session", "Abrir ao iniciar sessão", "登录时打开", "ログイン時に開く",
+        ]),
+        "general.launch_at_login_detail": row([
+            "Dictation is ready as soon as you turn on the Mac", "Диктовка готова сразу после включения Mac", "Das Diktat ist bereit, sobald Sie den Mac einschalten", "El dictado está listo en cuanto enciendes el Mac", "La dictée est prête dès que vous allumez le Mac", "O ditado fica pronto assim que você liga o Mac", "开机后即可使用听写", "Mac を起動するとすぐに音声入力を使えます",
+        ]),
+        "general.dock_detail": row([
+            "When off, Vaulto Note lives only in the menu bar", "Если выключить, Vaulto Note будет только в строке меню", "Wenn aus, erscheint Vaulto Note nur in der Menüleiste", "Si se desactiva, Vaulto Note solo estará en la barra de menús", "Désactivé, Vaulto Note n'apparaît que dans la barre des menus", "Desativado, o Vaulto Note fica só na barra de menus", "关闭后，Vaulto Note 只显示在菜单栏中", "オフにすると Vaulto Note はメニューバーにだけ表示されます",
+        ]),
+        "general.permissions": row([
+            "Permissions", "Разрешения", "Berechtigungen", "Permisos", "Autorisations", "Permissões", "权限", "許可",
+        ]),
+        "general.granted": row([
+            "Allowed", "Разрешено", "Erlaubt", "Permitido", "Autorisé", "Permitido", "已允许", "許可済み",
+        ]),
+        "general.models_folder": row([
+            "Models folder", "Папка с моделями", "Modellordner", "Carpeta de modelos", "Dossier des modèles", "Pasta de modelos", "模型文件夹", "モデルフォルダ",
+        ]),
+        "general.show_in_finder": row([
+            "Show in Finder", "Показать в Finder", "Im Finder zeigen", "Mostrar en Finder", "Afficher dans le Finder", "Mostrar no Finder", "在访达中显示", "Finder で表示",
+        ]),
+        "general.version": row([
+            "Version", "Версия", "Version", "Versión", "Version", "Versão", "版本", "バージョン",
+        ]),
+        "hud.esc_cancel": row([
+            "Esc — cancel", "Esc — отмена", "Esc – abbrechen", "Esc: cancelar", "Échap : annuler", "Esc: cancelar", "Esc 取消", "Esc でキャンセル",
+        ]),
+        "hud.copied": row([
+            "Copied to clipboard", "Скопировано в буфер обмена", "In die Zwischenablage kopiert", "Copiado al portapapeles", "Copié dans le presse-papiers", "Copiado para a área de transferência", "已复制到剪贴板", "クリップボードにコピーしました",
+        ]),
+        "menu.settings": row([
+            "Settings…", "Настройки…", "Einstellungen…", "Ajustes…", "Réglages…", "Ajustes…", "设置…", "設定…",
+        ]),
+        "mainmenu.undo": row([
+            "Undo", "Отменить", "Widerrufen", "Deshacer", "Annuler", "Desfazer", "撤销", "取り消す",
+        ]),
+        "mainmenu.cut": row([
+            "Cut", "Вырезать", "Ausschneiden", "Cortar", "Couper", "Recortar", "剪切", "カット",
         ]),
     ]
 }

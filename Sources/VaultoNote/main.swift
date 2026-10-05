@@ -28,6 +28,13 @@ if let flag = CommandLine.arguments.firstIndex(of: "--transcribe"), CommandLine.
     }
 }
 
+if let flag = CommandLine.arguments.firstIndex(of: "--snapshot"), CommandLine.arguments.count > flag + 1 {
+    let args = Array(CommandLine.arguments.dropFirst(flag + 1))
+    let languages = args.count > 1 ? Array(args.dropFirst()) : ["ru", "en"]
+    Snapshot.run(directory: URL(fileURLWithPath: args[0]), languages: languages)
+    exit(0)
+}
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
