@@ -93,6 +93,16 @@ exit code. Submission results and rejection logs are retained in
 `build/notarization/`. Check a result with
 `spctl --assess --type execute --verbose "build/Vaulto Note.app"`.
 
+Submission IDs are saved before polling begins. Temporary failures while checking
+Apple's status are retried against the same submission. Authentication errors
+and rejected submissions stop the process; a short stapling failure is retried.
+To recover an interrupted app notarization without rebuilding or uploading again,
+run `scripts/package-release.sh --resume-app <submission-id>`. Keep the original
+signed `build/Vaulto Note.app` intact. Recovery checks its signature, signer and
+version; Apple's ticket must match it before packaging can continue.
+For a standalone app or DMG, use
+`scripts/notarize.sh <target.app-or-dmg> <submission-id>`.
+
 Local builds signed with "Vaulto Note Dev" skip the hardened runtime on the app:
 without a Team ID, runtime library validation would reject whisper.framework.
 

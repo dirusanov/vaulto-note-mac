@@ -20,11 +20,15 @@ if [ -n "${SPARKLE_ED_KEY_FILE:-}" ]; then
   SIGNING_ARGS+=(--ed-key-file "$SPARKLE_ED_KEY_FILE")
 fi
 ARCHIVES_ONLY=false
+RESUME_APP_ID=""
 case "${1:-}" in
   "") ;;
   --archives-only) ARCHIVES_ONLY=true ;;
   --check) exec scripts/check-release.sh ;;
-  *) echo "Usage: scripts/package-release.sh [--check|--archives-only]" >&2; exit 1 ;;
+  --resume-app)
+    [ "$#" -eq 2 ] || { echo "Usage: scripts/package-release.sh --resume-app <submission-id>" >&2; exit 1; }
+    RESUME_APP_ID="${2:?submission ID is required}" ;;
+  *) echo "Usage: scripts/package-release.sh [--check|--archives-only|--resume-app <submission-id>]" >&2; exit 1 ;;
 esac
 if [ "$ARCHIVES_ONLY" = false ] && [ "$NOTARIZE" = false ]; then
   echo "A public release needs a Developer ID Application certificate; found '$IDENTITY'." >&2
@@ -36,16 +40,26 @@ if [ "$ARCHIVES_ONLY" = false ]; then
   SIGN_IDENTITY="$IDENTITY" scripts/check-release.sh
 fi
 scripts/fetch-sparkle-tools.sh
-if [ "$NOTARIZE" = true ] || [ -n "${SIGN_IDENTITY:-}" ]; then
+APP="build/Vaulto Note.app"
+if [ -n "$RESUME_APP_ID" ]; then
+  # A rebuild would change the signed binary while Apple processes the old one.
+  codesign --verify --deep --strict "$APP"
+  SIGNATURE_INFO=$(codesign -d --verbose=2 "$APP" 2>&1)
+  grep -Fq "Authority=$IDENTITY" <<< "$SIGNATURE_INFO" || {
+    echo "Existing app is not signed by the selected Developer ID." >&2; exit 1;
+  }
+  APP_VERSION=$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$APP/Contents/Info.plist")
+  [ "$APP_VERSION" = "$VERSION" ] || { echo "Existing app version does not match VERSION." >&2; exit 1; }
+  echo "Resuming submission $RESUME_APP_ID with the existing signed app."
+elif [ "$NOTARIZE" = true ] || [ -n "${SIGN_IDENTITY:-}" ]; then
   SIGN_IDENTITY="$IDENTITY" scripts/build-app.sh >/dev/null
 else
   scripts/build-app.sh >/dev/null
 fi
 mkdir -p build/release
-APP="build/Vaulto Note.app"
 # Staple before archiving: the Sparkle ZIP signature covers the stapled app.
 if [ "$NOTARIZE" = true ]; then
-  scripts/notarize.sh "$APP"
+  scripts/notarize.sh "$APP" "$RESUME_APP_ID"
 fi
 
 ZIP="build/release/Vaulto-Note-$VERSION.zip"
