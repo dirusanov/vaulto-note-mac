@@ -3,10 +3,17 @@
 #   Vaulto-Note-<version>.dmg  — drag-to-Applications window (main download)
 #   Vaulto-Note-<version>.zip  — plain zip of the app
 #   appcast.xml               — signed Sparkle feed (publish with both archives)
+# With a Developer ID identity the app and DMG are notarized by Apple and stapled,
+# so they open without Gatekeeper warnings. A full release requires Developer ID.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 VERSION=$(cat VERSION)
-IDENTITY="${SIGN_IDENTITY:-Vaulto Note Dev}"
+IDENTITY="${SIGN_IDENTITY:-$(scripts/signing-identity.sh)}"
+case "$IDENTITY" in
+  "Developer ID Application"*) NOTARIZE=true ;;
+  *) NOTARIZE=false ;;
+esac
 SPARKLE_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-com.vaultonote.mac.sparkle}"
 SIGNING_ARGS=(--account "$SPARKLE_ACCOUNT")
 if [ -n "${SPARKLE_ED_KEY_FILE:-}" ]; then
@@ -16,22 +23,30 @@ ARCHIVES_ONLY=false
 case "${1:-}" in
   "") ;;
   --archives-only) ARCHIVES_ONLY=true ;;
-  *) echo "Usage: scripts/package-release.sh [--archives-only]" >&2; exit 1 ;;
+  --check) exec scripts/check-release.sh ;;
+  *) echo "Usage: scripts/package-release.sh [--check|--archives-only]" >&2; exit 1 ;;
 esac
-scripts/fetch-sparkle-tools.sh
-# Refuse a release that cannot be signed with the key trusted by installed apps.
-if [ "$ARCHIVES_ONLY" = false ] && [ -z "${SPARKLE_ED_KEY_FILE:-}" ]; then
-  PUBLIC_KEY=$(build/sparkle-tools/bin/generate_keys --account "$SPARKLE_ACCOUNT" -p)
-  EXPECTED_KEY=$(/usr/libexec/PlistBuddy -c 'Print SUPublicEDKey' Resources/Info.plist)
-  if [ "$PUBLIC_KEY" != "$EXPECTED_KEY" ]; then
-    echo "Sparkle signing key is missing or does not match Resources/Info.plist." >&2
-    echo "Restore the release key to your login Keychain; see docs/updates.md." >&2
-    exit 1
-  fi
+if [ "$ARCHIVES_ONLY" = false ] && [ "$NOTARIZE" = false ]; then
+  echo "A public release needs a Developer ID Application certificate; found '$IDENTITY'." >&2
+  echo "See docs/updates.md, or use --archives-only for a local review build." >&2
+  exit 1
 fi
-scripts/build-app.sh >/dev/null
+# Refuse missing Apple or updater credentials before rebuilding the app.
+if [ "$ARCHIVES_ONLY" = false ]; then
+  SIGN_IDENTITY="$IDENTITY" scripts/check-release.sh
+fi
+scripts/fetch-sparkle-tools.sh
+if [ "$NOTARIZE" = true ] || [ -n "${SIGN_IDENTITY:-}" ]; then
+  SIGN_IDENTITY="$IDENTITY" scripts/build-app.sh >/dev/null
+else
+  scripts/build-app.sh >/dev/null
+fi
 mkdir -p build/release
 APP="build/Vaulto Note.app"
+# Staple before archiving: the Sparkle ZIP signature covers the stapled app.
+if [ "$NOTARIZE" = true ]; then
+  scripts/notarize.sh "$APP"
+fi
 
 ZIP="build/release/Vaulto-Note-$VERSION.zip"
 rm -f "$ZIP"
@@ -48,7 +63,12 @@ DMG="build/release/Vaulto-Note-$VERSION.dmg"
 rm -f "$DMG"
 "$VENV/bin/dmgbuild" -s scripts/dmg-settings.py -D app="$APP" -D background=Resources/dmg-background.tiff \
   "Vaulto Note" "$DMG" >/dev/null
-if security find-certificate -c "$IDENTITY" >/dev/null 2>&1; then
+if [ "$NOTARIZE" = true ]; then
+  codesign --force --sign "$IDENTITY" --timestamp --identifier com.vaultonote.mac.dmg "$DMG"
+  scripts/notarize.sh "$DMG"
+  spctl --assess --type execute --verbose "$APP"
+  spctl --assess --type open --context context:primary-signature --verbose "$DMG"
+elif security find-certificate -c "$IDENTITY" >/dev/null 2>&1; then
   codesign --force --sign "$IDENTITY" --identifier com.vaultonote.mac.dmg "$DMG"
 fi
 

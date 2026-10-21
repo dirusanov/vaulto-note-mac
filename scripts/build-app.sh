@@ -4,17 +4,29 @@
 #   scripts/build-app.sh            # build
 #   scripts/build-app.sh --install  # build and copy to ~/Applications
 #
-# Signs with the "Vaulto Note Dev" identity when it exists (see create-dev-cert.sh),
-# otherwise ad-hoc. With ad-hoc signing macOS treats every rebuild as a new app and
-# asks for Accessibility again.
+# Signs with SIGN_IDENTITY when set, otherwise with the first "Developer ID Application"
+# identity in the Keychain (public releases, see docs/updates.md), then "Vaulto Note Dev"
+# (see create-dev-cert.sh), then ad-hoc. With ad-hoc signing macOS treats every rebuild
+# as a new app and asks for Accessibility again.
 set -euo pipefail
 umask 022
 
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
 APP="$ROOT/build/Vaulto Note.app"
-IDENTITY="${SIGN_IDENTITY:-Vaulto Note Dev}"
 VERSION=$(cat VERSION)
+IDENTITY="${SIGN_IDENTITY:-$(scripts/signing-identity.sh)}"
+if [ "$IDENTITY" = "-" ]; then
+  SIGN="-"
+elif security find-identity -v -p codesigning | grep -Fq "\"$IDENTITY\""; then
+  SIGN="$IDENTITY"
+elif [ -n "${SIGN_IDENTITY:-}" ]; then
+  echo "Requested signing identity is unavailable or has no usable private key: $IDENTITY" >&2
+  exit 1
+else
+  echo "warning: no signing identity found, signing ad-hoc" >&2
+  SIGN="-"
+fi
 
 if [ ! -d Vendor/whisper.xcframework ]; then
   scripts/fetch-whisper.sh
@@ -50,22 +62,26 @@ cp -R Resources/*.lproj "$APP/Contents/Resources/"
 # cache. Public app bundles must remain readable/executable for other Mac users.
 chmod -R go-w,a+rX "$APP"
 
-if security find-certificate -c "$IDENTITY" >/dev/null 2>&1; then
-  SIGN="$IDENTITY"
-else
-  echo "warning: signing identity '$IDENTITY' not found, signing ad-hoc" >&2
-  SIGN="-"
-fi
-codesign --force --sign "$SIGN" "$APP/Contents/Frameworks/whisper.framework"
+# Notarization needs a secure timestamp and the hardened runtime on the app. Local
+# builds skip both: without a Team ID, runtime library validation rejects whisper.framework.
+case "$SIGN" in
+  "Developer ID Application"*)
+    STAMP=--timestamp
+    APP_RUNTIME=(--options runtime --entitlements Resources/VaultoNote.entitlements) ;;
+  *)
+    STAMP=--timestamp=none
+    APP_RUNTIME=() ;;
+esac
+codesign --force --sign "$SIGN" $STAMP --options runtime "$APP/Contents/Frameworks/whisper.framework"
 # Sparkle's installer and downloader must retain their entitlements and be
 # signed from the inside out. --deep signing can silently break the helpers.
 SPARKLE="$APP/Contents/Frameworks/Sparkle.framework"
-codesign --force --sign "$SIGN" --options runtime "$SPARKLE/Versions/B/XPCServices/Installer.xpc"
-codesign --force --sign "$SIGN" --options runtime --preserve-metadata=entitlements "$SPARKLE/Versions/B/XPCServices/Downloader.xpc"
-codesign --force --sign "$SIGN" --options runtime "$SPARKLE/Versions/B/Autoupdate"
-codesign --force --sign "$SIGN" --options runtime "$SPARKLE/Versions/B/Updater.app"
-codesign --force --sign "$SIGN" --options runtime "$SPARKLE"
-codesign --force --sign "$SIGN" --identifier com.vaultonote.mac "$APP"
+codesign --force --sign "$SIGN" $STAMP --options runtime "$SPARKLE/Versions/B/XPCServices/Installer.xpc"
+codesign --force --sign "$SIGN" $STAMP --options runtime --preserve-metadata=entitlements "$SPARKLE/Versions/B/XPCServices/Downloader.xpc"
+codesign --force --sign "$SIGN" $STAMP --options runtime "$SPARKLE/Versions/B/Autoupdate"
+codesign --force --sign "$SIGN" $STAMP --options runtime "$SPARKLE/Versions/B/Updater.app"
+codesign --force --sign "$SIGN" $STAMP --options runtime "$SPARKLE"
+codesign --force --sign "$SIGN" $STAMP ${APP_RUNTIME[@]+"${APP_RUNTIME[@]}"} --identifier com.vaultonote.mac "$APP"
 codesign --verify --deep --strict "$APP"
 echo "Built $APP ($VERSION, signed: $SIGN)"
 

@@ -52,7 +52,7 @@ func draw(scale: CGFloat, to path: String) {
     }
     text("Drag Vaulto Note to Applications", size: 20, weight: .semibold,
          color: NSColor(white: 0.12, alpha: 1), y: 84)
-    text("First launch: right-click the app → Open", size: 13, weight: .regular,
+    text("Then open Vaulto Note from Applications", size: 13, weight: .regular,
          color: NSColor(white: 0.42, alpha: 1), y: 52)
 
     NSGraphicsContext.restoreGraphicsState()
