@@ -1,0 +1,35 @@
+{
+  "checked_at_utc": "2026-10-23T07:27:08.289536+00:00",
+  "version": "0.1.1",
+  "binary_source_commit": "402cd6f8340e0511520d234e26f6da7a33993bb3",
+  "checks": {
+    "unit_tests": {
+      "passed": 35,
+      "failed": 0
+    },
+    "visual_review": "76 UI renders generated: Russian and English, light and dark; key onboarding, error, setup and settings screens inspected; DMG background and Finder layout metadata inspected",
+    "installed_app": "copied from downloaded DMG to /Applications via Finder, launched via LaunchServices; both ordinary and quarantined-DMG installations launched successfully",
+    "quarantine_simulation": "Safari-style quarantine attribute added to a CLI-downloaded DMG before mounting; installed with Finder, no quarantine-removal command used",
+    "launch_window": "first-run window observed via CoreGraphics; event-loop sample responsive",
+    "syspolicy_check": "passed all pre-distribution checks",
+    "gatekeeper_installed_app": "accepted; Notarized Developer ID",
+    "transcription_english": "signed installed executable processed 4.9s synthetic audio, large model; brand name spelled phonetically",
+    "transcription_russian": "signed installed executable processed 5.7s synthetic audio, default turbo model; expected phrase recognized",
+    "model_download_endpoint": "HTTP 206, first four bytes lmgg from default model endpoint",
+    "update_signatures": "signed feed and ZIP verified in packaging; uploaded draft downloads match SHA256SUMS"
+  },
+  "findings_resolved": [
+    "README on main had obsolete quarantine-bypass instructions; release README now documents standard signed installation",
+    "release notes now include direct download, requirements, model size, permissions, retry and quit-old-app-before-replacement instructions"
+  ],
+  "test_environment_issue": "An initial ditto overlay of the old running installation retained stale AppTranslocation behavior and failed loading whisper. Quit the old process and repeated actual Finder replacement; ordinary and quarantined-DMG installs launched successfully. Release binary unchanged.",
+  "limits": [
+    "DMG downloaded with GitHub CLI; browser-origin quarantine simulated, no browser download performed",
+    "screen recording unavailable; actual Finder window screenshot unavailable, UI renders and DMG background inspected instead",
+    "microphone capture and global insertion were not exercised with real user audio",
+    "first model download tested by endpoint and retry logic, full model not downloaded again",
+    "tested on this Apple Silicon Mac running macOS 27; minimum macOS 14 not independently exercised"
+  ],
+  "artifacts": "build/release-review-2026-10-23/",
+  "publication": "ready for publication after checks"
+}

@@ -1,0 +1,36 @@
+{
+  "checked_at_utc": "2026-10-23T07:13:49.554668+00:00",
+  "version": "0.1.1",
+  "source_commit": "402cd6f8340e0511520d234e26f6da7a33993bb3",
+  "app_submission_id": "8a0b8e1d-fafa-4bea-baae-7a89d22bd91c",
+  "dmg_submission_id": "21afceec-ea62-438e-ac57-02ea70cf7efd",
+  "app_notarization": "Accepted",
+  "dmg_notarization": "Accepted",
+  "checks": {
+    "app_signature": "passed deep strict",
+    "dmg_signature": "passed strict",
+    "app_and_dmg_stapled_tickets": "validated",
+    "gatekeeper_app_and_dmg": "accepted, Notarized Developer ID",
+    "mounted_dmg_app": "accepted, signature and stapled ticket validated",
+    "disk_image_integrity": "passed hdiutil verify",
+    "sparkle_feed_and_zip_signature": "verified against embedded public key",
+    "manual_browser_download_and_gui_first_launch": "not performed",
+    "github_draft_download_checksums": "DMG, ZIP, appcast downloaded from GitHub; all SHA256 checks passed"
+  },
+  "files": {
+    "Vaulto-Note-0.1.1.dmg": {
+      "bytes": 5493410,
+      "sha256": "61ca115b61f135a39eb1fd2e8b5f5aff85e5bcc81ae153f0c117192e31ff85a8"
+    },
+    "Vaulto-Note-0.1.1.zip": {
+      "bytes": 4536817,
+      "sha256": "25254a99850140d7aeb16741e80dd59c8ed587004a27a7ffecae81e4ec4e6e8e"
+    },
+    "appcast.xml": {
+      "bytes": 1866,
+      "sha256": "b272b11dc163fcad877e864bc8a0be739e48732213cd1b61c4e90b646972c34a"
+    }
+  },
+  "publication": "GitHub draft; not public",
+  "github_draft_url": "https://github.com/dirusanov/vaulto-note-mac/releases/tag/untagged-2cd6aa6f8ccda079a88b"
+}

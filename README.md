@@ -88,12 +88,12 @@
 
 ## Install
 
-1. Download **Vaulto-Note-x.y.z.dmg** from the [latest release](https://github.com/dirusanov/vaulto-note-mac/releases/latest).
+1. [Download Vaulto Note for Mac (DMG)](https://github.com/dirusanov/vaulto-note-mac/releases/latest/download/Vaulto-Note-0.1.1.dmg). Requires **Apple Silicon (M1 or newer)** and **macOS 14+**; Intel Macs are not supported.
 2. Open it and drag **Vaulto Note** onto **Applications**.
-3. Launch Vaulto Note from Applications. The app is signed with a Developer ID and notarized by Apple, so it opens like any other Mac app.
+3. Launch Vaulto Note from Applications, then eject the disk image. The app is signed with a Developer ID and notarized by Apple. If macOS asks whether to open an app downloaded from the internet, choose **Open**.
 4. Follow the welcome screens: allow the microphone and Accessibility, pick your key, try your first dictation.
 
-The speech model (about 1.6 GB) downloads once during setup; after that everything works offline.
+The speech model (about 1.6 GB) downloads once during setup, so keep an internet connection for the first setup. The guide shows progress and offers a retry if downloading fails; after setup dictation works offline. To insert text into other apps, enable Vaulto Note in **System Settings → Privacy & Security → Accessibility** when the guide asks.
 
 **Requirements:** macOS 14 Sonoma or later, Apple Silicon (M1 or newer), ~2 GB of free space.
 
@@ -103,7 +103,7 @@ Starting with **0.1.1**, Vaulto Note checks for updates daily while running. Whe
 
 You can also choose **Check for updates…** from the Vaulto Note menu, the menu bar, or **Settings → General**. Automatic checks can be disabled there. Models, dictation history and preferences are preserved; the speech model does not need downloading again.
 
-**Already on 0.1.0?** Install the latest DMG once and replace the old app in Applications. That version has no updater, so it cannot bootstrap itself. Because 0.1.1 is the first release signed with a Developer ID, macOS asks once more for the microphone and Accessibility. Future updates then happen inside the app. See [release setup](docs/updates.md) for signing and publication instructions.
+**Already on 0.1.0?** Quit the old Vaulto Note from its menu first. Install the latest DMG once, choose **Replace** when copying to Applications, and open the new copy from Applications. That version has no updater, so it cannot bootstrap itself. Because 0.1.1 is the first release signed with a Developer ID, macOS may ask once more for the microphone and Accessibility. Models, history, and preferences are preserved. Future updates then happen inside the app. See [release setup](docs/updates.md) for signing and publication instructions.
 
 ## How it works
 
